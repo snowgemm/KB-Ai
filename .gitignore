@@ -1,0 +1,33 @@
+# Android / Gradle
+.gradle/
+**/build/
+local.properties
+.cxx/
+.externalNativeBuild/
+*.iml
+.idea/
+captures/
+.navigation/
+
+# Android outputs
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Rust / Cargo
+target/
+**/target/
+
+# Local configuration and signing material
+.env
+.env.*
+!.env.example
+key.properties
+secrets.properties
+*.jks
+*.keystore
+
+# Operating systems
+.DS_Store
+Thumbs.db
