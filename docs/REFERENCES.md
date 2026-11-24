@@ -10,7 +10,7 @@ This page records primary documentation reviewed for the proposed architecture a
 - [InputMethodService API](https://developer.android.com/reference/android/inputmethodservice/InputMethodService) — IME lifecycle and service API.
 - [InputConnection API](https://developer.android.com/reference/android/view/inputmethod/InputConnection) — composing, commit, selection, deletion, and editor interaction.
 - [EditorInfo API](https://developer.android.com/reference/android/view/inputmethod/EditorInfo) — editor type and IME options.
-- [Android 17 setup](https://developer.android.com/about/versions/17/setup-sdk) — API 37 SDK setup.
+- [Android 16 setup](https://developer.android.com/about/versions/16/setup-sdk) — stable API 36 SDK setup.
 - [Android Gradle Plugin release information](https://developer.android.com/build/releases/about-agp) — AGP / Gradle compatibility and built-in Kotlin support.
 - [Android Photo Picker](https://developer.android.com/training/data-storage/shared/photopicker) — user-selected image access for future local keyboard themes.
 
@@ -23,7 +23,7 @@ This page records primary documentation reviewed for the proposed architecture a
 | Gradle wrapper checksum | Official 9.9.2 checksum | [Gradle release checksums](https://gradle.org/release-checksums/) |
 | Android Gradle Plugin | 9.5.2 | [AGP release information](https://developer.android.com/build/releases/about-agp) |
 | Kotlin support | Built into AGP 9 | [AGP 9 built-in Kotlin migration](https://developer.android.com/build/migrate-to-built-in-kotlin) |
-| Android SDK | API 37 | [Android 17 SDK setup](https://developer.android.com/about/versions/17/setup-sdk) |
+| Android SDK | API 36 | [Android 16 SDK setup](https://developer.android.com/about/versions/16/setup-sdk) |
 | Android NDK | 30.0.16248370 | [Android NDK release notes](https://developer.android.com/ndk/downloads/revision_history) |
 | Rust | 1.100.0 | [Rust 1.100.0 release](https://blog.rust-lang.org/2026/11/12/Rust-1.100.0/) |
 | cargo-ndk | 4.1.2 | [cargo-ndk repository](https://github.com/bbqsrc/cargo-ndk/tree/v4.1.2) |

@@ -173,8 +173,8 @@ The unicode-segmentation crate is a candidate for grapheme-boundary work. Its su
 | Gradle Wrapper | 9.9.2 |
 | Android Gradle Plugin | 9.5.2 |
 | Kotlin | AGP 9 built-in Kotlin support; do not apply the legacy Kotlin Android plugin |
-| Compile SDK | 37 |
-| Build Tools | 37.0.0 |
+| Compile SDK | 36 |
+| Build Tools | 36.0.0 |
 | Target SDK | 36 |
 | Minimum SDK | 23 |
 | NDK | 30.0.16248370 |

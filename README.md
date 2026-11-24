@@ -64,13 +64,13 @@ The versions below are pinned for reproducible builds:
 | Gradle Wrapper | 9.9.2 |
 | Android Gradle Plugin | 9.5.2 |
 | Android built-in Kotlin | Provided by AGP 9 |
-| Android SDK Platform | 37 |
-| Android Build Tools | 37.0.0 |
+| Android SDK Platform | 36 |
+| Android Build Tools | 36.0.0 |
 | Android NDK | 30.0.16248370 |
 | Rust | 1.100.0 |
 | cargo-ndk | 4.1.2 |
 
-Install the Android SDK Platform 37, Build Tools 37.0.0, and NDK 30.0.16248370 using Android Studio SDK Manager or `sdkmanager`. Set `ANDROID_SDK_ROOT` (or `ANDROID_HOME`) and, when needed, `ANDROID_NDK_HOME`.
+Install the Android SDK Platform 36, Build Tools 36.0.0, and NDK 30.0.16248370 using Android Studio SDK Manager or `sdkmanager`. Set `ANDROID_SDK_ROOT` (or `ANDROID_HOME`) and, when needed, `ANDROID_NDK_HOME`.
 
 The Rust version and Android targets are declared in `rust-toolchain.toml`. Install the pinned cargo-ndk version:
 
