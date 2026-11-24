@@ -8,9 +8,6 @@ mod tests {
 
     #[test]
     fn returns_a_deterministic_phase_zero_status() {
-        assert_eq!(
-            native_status(),
-            "KB-Ai Rust native bridge is connected."
-        );
+        assert_eq!(native_status(), "KB-Ai Rust native bridge is connected.");
     }
 }
