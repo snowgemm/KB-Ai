@@ -1,6 +1,6 @@
 # Technical References
 
-This page records primary documentation reviewed for the proposed architecture. Versions and recommendations must be rechecked when implementation begins.
+This page records primary documentation reviewed for the proposed architecture and the Phase 0 build. Versions and recommendations must be rechecked when implementation begins.
 
 **Last reviewed:** 2026-11-24
 
@@ -10,21 +10,50 @@ This page records primary documentation reviewed for the proposed architecture. 
 - [InputMethodService API](https://developer.android.com/reference/android/inputmethodservice/InputMethodService) — IME lifecycle and service API.
 - [InputConnection API](https://developer.android.com/reference/android/view/inputmethod/InputConnection) — composing, commit, selection, deletion, and editor interaction.
 - [EditorInfo API](https://developer.android.com/reference/android/view/inputmethod/EditorInfo) — editor type and IME options.
-- [EditorInfoCompat API](https://developer.android.com/reference/androidx/core/view/inputmethod/EditorInfoCompat) — compatibility constants, including the no-personalized-learning request.
-- [InputConnection.commitContent](https://developer.android.com/reference/android/view/inputmethod/InputConnection#commitContent(android.view.inputmethod.InputContentInfo,int,android.os.Bundle)) — rich-content insertion for future GIF and sticker support.
+- [Android 17 setup](https://developer.android.com/about/versions/17/setup-sdk) — API 37 SDK setup.
+- [Android Gradle Plugin release information](https://developer.android.com/build/releases/about-agp) — AGP / Gradle compatibility and built-in Kotlin support.
 - [Android Photo Picker](https://developer.android.com/training/data-storage/shared/photopicker) — user-selected image access for future local keyboard themes.
+
+## Pinned Phase 0 toolchain
+
+| Component | Selected version | Primary reference |
+|---|---|---|
+| JDK | 17 | [AGP release information](https://developer.android.com/build/releases/about-agp) |
+| Gradle | 9.9.2 | [Gradle release notes](https://docs.gradle.org/current/release-notes.html) |
+| Gradle wrapper checksum | Official 9.9.2 checksum | [Gradle release checksums](https://gradle.org/release-checksums/) |
+| Android Gradle Plugin | 9.5.2 | [AGP release information](https://developer.android.com/build/releases/about-agp) |
+| Kotlin support | Built into AGP 9 | [AGP 9 built-in Kotlin migration](https://developer.android.com/build/migrate-to-built-in-kotlin) |
+| Android SDK | API 37 | [Android 17 SDK setup](https://developer.android.com/about/versions/17/setup-sdk) |
+| Android NDK | 30.0.16248370 | [Android NDK release notes](https://developer.android.com/ndk/downloads/revision_history) |
+| Rust | 1.100.0 | [Rust 1.100.0 release](https://blog.rust-lang.org/2026/11/12/Rust-1.100.0/) |
+| cargo-ndk | 4.1.2 | [cargo-ndk repository](https://github.com/bbqsrc/cargo-ndk/tree/v4.1.2) |
+| JNI crate | 0.22.4 | [jni crate documentation](https://docs.rs/jni/0.22.4/jni/) |
+
+AGP 9 supplies built-in Kotlin support. Do not also apply the legacy `org.jetbrains.kotlin.android` plugin to this project.
 
 ## Rust and Android native integration
 
 - [Rust Android platform support](https://doc.rust-lang.org/rustc/platform-support/android.html) — supported Android Rust targets and NDK requirements.
-- [jni crate](https://docs.rs/jni/latest/jni/) — Rust bindings for the Java Native Interface.
-- [cargo-ndk](https://github.com/bbqsrc/cargo-ndk) — candidate build helper for producing Android native libraries and ABI output directories.
-- [UniFFI Kotlin / Gradle integration](https://mozilla.github.io/uniffi-rs/latest/kotlin/gradle.html) — evaluated alternative; it currently documents manual binding-generation wiring and a JNA dependency.
+- [jni crate](https://docs.rs/jni/0.22.4/jni/) — Rust bindings for the Java Native Interface.
+- [cargo-ndk](https://github.com/bbqsrc/cargo-ndk/tree/v4.1.2) — builds Android native libraries and arranges output in the expected jniLibs directory.
+- [Gradle Wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) — wrapper usage and verification.
+- [Gradle build security](https://docs.gradle.org/current/userguide/securing_build_tool.html) — wrapper JAR verification and distribution checksums.
 
 ## Unicode
 
 - [Unicode Standard Annex #29](https://www.unicode.org/reports/tr29/) — grapheme, word, and sentence boundary rules.
 - [unicode-segmentation crate](https://docs.rs/unicode-segmentation/latest/unicode_segmentation/) — candidate Rust implementation of grapheme and word segmentation.
+
+## CI actions
+
+The workflow pins actions by full commit SHA. Review each action's upstream release and permissions before changing the pin:
+
+- [actions/checkout](https://github.com/actions/checkout/releases)
+- [actions/setup-java](https://github.com/actions/setup-java/releases)
+- [android-actions/setup-android](https://github.com/android-actions/setup-android/releases)
+- [dtolnay/rust-toolchain](https://github.com/dtolnay/rust-toolchain)
+- [gradle/actions](https://github.com/gradle/actions/releases)
+- [actions/upload-artifact](https://github.com/actions/upload-artifact/releases)
 
 ## Product references
 

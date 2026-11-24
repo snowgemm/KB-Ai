@@ -1,29 +1,38 @@
 # Roadmap
 
-**Status:** Planning roadmap. Milestones are ordered by dependency and risk, not by calendar date. No release dates are promised.
+**Status:** Phase 0 source prototype is being established. Milestones are ordered by dependency and risk, not by calendar date. No release dates are promised.
 
 ## Phase 0 — Repository and integration spike
 
 **Goal:** prove the Android/Rust toolchain before building product features.
 
-- Establish the Gradle application skeleton.
-- Establish the smallest Rust workspace.
-- Build a Rust shared library for Android.
-- Load the native library from Kotlin.
-- Exercise a minimal JNI method.
-- Verify ABI packaging on an emulator and a physical device.
-- Record toolchain versions and a reproducible build path.
-- Decide the minimum Android API level from the support target.
+Current source scope:
 
-**Exit criteria:** a reproducible debug build loads the native library and returns a validated test result on the selected Android targets.
+- Gradle application skeleton.
+- Rust workspace with a core crate and JNI cdylib.
+- Android test app and test-only IME.
+- Kotlin-to-Rust status call.
+- Rust status unit test.
+- Android sensitive-field policy unit tests.
+- Pinned toolchain and CI workflow.
+
+Remaining exit checks:
+
+- CI builds the APK successfully.
+- Rust formatting, tests, and Clippy pass.
+- Android unit tests pass.
+- Native libraries are packaged for ARM64 and x86_64.
+- Install and test on a physical Android device.
+- Record actual build and device-test evidence.
+
+Do not treat documentation or source creation alone as completion of Phase 0.
 
 ## Phase 1 — Android IME skeleton
 
-- Declare and register InputMethodService.
-- Complete the enable/select onboarding flow.
-- Show a basic keyboard view.
-- Insert ordinary characters through InputConnection.
+- Replace the Phase 0 test-only UI with a minimal letter keyboard.
+- Handle ordinary key input through InputConnection.
 - Handle editor actions and lifecycle callbacks.
+- Add test fields for text, email, URL, number, and password input.
 
 **Exit criteria:** the IME can be enabled, selected, shown, and used in a range of editor fields without losing or duplicating ordinary characters.
 

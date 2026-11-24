@@ -1,6 +1,6 @@
 # Security and Privacy Design
 
-**Status:** Product requirement; implementation and verification are pending.
+**Status:** Requirements documented. Phase 0 prototype behavior is limited; full verification is pending.
 
 ## 1. Threat model
 
@@ -8,9 +8,23 @@ A keyboard can observe text entered into many applications. That makes its data 
 
 KB-Ai must assume that users may enter passwords, authentication codes, private messages, financial details, or other sensitive content.
 
-The design therefore follows data minimization: do not collect information that the keyboard does not need to provide the requested input behavior.
+The design follows data minimization: do not collect information that the keyboard does not need to provide the requested input behavior.
 
-## 2. Default data policy
+## 2. Phase 0 behavior
+
+The current test prototype:
+
+- Does not request Android Internet permission.
+- Does not read the text already present in the focused editor.
+- Does not read or monitor Clipboard content.
+- Does not store typing history or composing text.
+- Only inserts a fixed, non-user-derived diagnostic string after an explicit button tap.
+- Disables that test insertion button for recognized password and numeric-password fields.
+- Does not implement learning, suggestions, analytics, or network services.
+
+This is a source-level design description. CI and device testing must still verify the implementation.
+
+## 3. Default data policy
 
 | Data | Default behavior |
 |---|---|
@@ -27,7 +41,7 @@ The design therefore follows data minimization: do not collect information that 
 | Cloud synchronization | Not included |
 | Network access | Not required for the core MVP |
 
-## 3. Sensitive editor fields
+## 4. Sensitive editor fields
 
 Kotlin must derive an EditorPolicy from EditorInfo inputType and imeOptions.
 
@@ -41,7 +55,7 @@ At minimum:
 
 Android's IME_FLAG_NO_PERSONALIZED_LEARNING is a request from the editor. KB-Ai must respect it; it is not a substitute for detecting password input types.
 
-## 4. Logging and diagnostics
+## 5. Logging and diagnostics
 
 Never log:
 
@@ -55,7 +69,7 @@ Diagnostics may record non-content metadata such as event names, error categorie
 
 Debug builds must follow the same no-typed-content rule.
 
-## 5. Clipboard
+## 6. Clipboard
 
 The MVP does not implement clipboard history.
 
@@ -69,7 +83,7 @@ If clipboard history is added later:
 - Do not include clipboard data in diagnostics.
 - Respect Android clipboard privacy behavior and platform restrictions.
 
-## 6. Network and online features
+## 7. Network and online features
 
 The core MVP should not request the Android Internet permission.
 
@@ -84,7 +98,7 @@ A later online feature must have:
 
 Do not send typed text to a remote AI service by default.
 
-## 7. Local storage
+## 8. Local storage
 
 - Store only settings and data needed for enabled features.
 - Do not persist the active composing buffer.
@@ -92,7 +106,7 @@ Do not send typed text to a remote AI service by default.
 - Provide deletion controls for user-created local data.
 - Avoid collecting data merely because it might improve future prediction.
 
-## 8. Native boundary
+## 9. Native boundary
 
 - Validate all JNI arguments and lengths.
 - Convert native failures into controlled error results.
@@ -102,7 +116,7 @@ Do not send typed text to a remote AI service by default.
 - Do not create native background threads that call back into Kotlin in the MVP.
 - Keep native dependencies minimal and review their licenses.
 
-## 9. Assets and datasets
+## 10. Assets and datasets
 
 Every dictionary, language model, test corpus, font, image, emoji asset, and theme asset must have:
 
@@ -114,7 +128,7 @@ Every dictionary, language model, test corpus, font, image, emoji asset, and the
 
 Do not copy proprietary dictionaries or assets from commercial keyboard applications.
 
-## 10. Release security checklist
+## 11. Release security checklist
 
 Before a release:
 

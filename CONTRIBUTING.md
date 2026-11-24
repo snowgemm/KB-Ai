@@ -2,16 +2,31 @@
 
 Thank you for considering a contribution.
 
-KB-Ai is currently in the planning and specification phase. The architecture and product requirements are documented, but the application and native engine have not been implemented.
+KB-Ai currently has a Phase 0 Android/Rust integration prototype. It is not yet a production keyboard and does not yet implement QWERTY, Telex, VNI, or prediction.
 
 ## Before starting
 
 1. Read the [Product Specification](docs/PRODUCT_SPEC.md).
 2. Read the [Architecture](docs/ARCHITECTURE.md) and relevant [ADRs](docs/adr/).
 3. Check the [Roadmap](docs/ROADMAP.md) and existing GitHub issues.
-4. For a new feature, discuss its user value, privacy impact, platform requirements, and maintenance cost before implementation.
+4. For a new feature, discuss user value, privacy impact, platform requirements, and maintenance cost before implementation.
 
-Please avoid adding dependencies or splitting modules without a clear technical reason.
+Avoid adding dependencies or splitting modules without a clear technical reason.
+
+## Toolchain
+
+Use the versions recorded in the README and `rust-toolchain.toml`. Android SDK Platform 37, Build Tools 37.0.0, NDK 30.0.16248370, JDK 17, Rust 1.100.0, and cargo-ndk 4.1.2 are required for the current prototype.
+
+## Local validation
+
+```sh
+cargo fmt --all --manifest-path native/Cargo.toml -- --check
+cargo test --workspace --manifest-path native/Cargo.toml
+cargo clippy --workspace --manifest-path native/Cargo.toml --all-targets -- -D warnings
+./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug
+```
+
+On Windows, use `gradlew.bat` for the last command. These commands are the expected checks; report their actual results rather than assuming they passed.
 
 ## Contribution expectations
 
@@ -25,24 +40,20 @@ Please avoid adding dependencies or splitting modules without a clear technical 
 
 ## Code quality
 
-When implementation begins:
-
 - Format Rust with rustfmt.
 - Run Rust tests and Clippy for changed crates.
-- Run Android unit tests, lint, and the relevant build variants.
+- Run Android unit tests, lint, and relevant build variants.
 - Test the IME in multiple editor types, including password and numeric fields.
 - Test Unicode behavior with combining marks and multi-code-point emoji.
 - Include regression tests for every fixed input or lifecycle bug.
 - Keep native interfaces small, typed, and versioned.
 
-The exact commands will be added after the Gradle and Cargo project structure has been created and verified. Do not copy commands from an unrelated project and assume they work here.
-
 ## Pull requests
 
 - Open an issue first for substantial features or architectural changes.
-- Use a clear title and describe the behavior change, implementation boundaries, and test evidence.
-- Include screenshots or short recordings for UI changes when they do not expose private information.
-- List any limitations and follow-up work honestly.
+- Use a clear title and describe behavior changes, implementation boundaries, and test evidence.
+- Include sanitized screenshots or recordings for UI changes when useful.
+- List limitations and follow-up work honestly.
 - Keep unrelated formatting or refactoring out of the change.
 
 ## Commit messages
@@ -57,6 +68,6 @@ Use Conventional Commits where practical:
 - build: change build tooling or dependencies
 - chore: maintenance work
 
-## Reporting security issues
+## Security reports
 
 Do not disclose vulnerabilities in public issues. Follow the private reporting guidance in [SECURITY.md](SECURITY.md).

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KB-Ai</string>
+    <string name="ime_name">KB-Ai Phase 0 Test IME</string>
+    <string name="app_title">KB-Ai</string>
+    <string name="phase0_title">Bản thử nghiệm tích hợp</string>
+    <string name="phase0_description">Đây là prototype Phase 0 để kiểm tra Android IME và Rust JNI. Bản này chưa phải bàn phím nhập liệu hoàn chỉnh và chưa có QWERTY, Telex hoặc VNI.</string>
+    <string name="open_ime_settings">Bật KB-Ai trong Cài đặt</string>
+    <string name="show_ime_picker">Chọn bàn phím KB-Ai</string>
+    <string name="test_field_title">Ô thử nhập liệu</string>
+    <string name="test_field_hint">Chạm vào đây sau khi chọn KB-Ai</string>
+    <string name="native_test_button">Kiểm tra Rust JNI</string>
+    <string name="native_status_pending">Chưa kiểm tra Rust Core.</string>
+    <string name="native_status_success">Rust trả về: %1$s</string>
+    <string name="native_status_error">Không tải được thư viện Rust. Kiểm tra ABI và bản build.</string>
+    <string name="subtype_vietnamese">Tiếng Việt</string>
+    <string name="subtype_english">English</string>
+    <string name="ime_test_title">KB-Ai · Phase 0</string>
+    <string name="ime_test_description">IME thử nghiệm chỉ kiểm tra việc gọi Rust qua JNI. Nó chưa phải bàn phím QWERTY.</string>
+    <string name="ime_insert_status">Chèn trạng thái Rust vào ô nhập</string>
+    <string name="ime_insert_success">Đã chèn chuỗi kiểm tra.</string>
+    <string name="ime_insert_failed">Không thể chèn chuỗi kiểm tra vào ô nhập.</string>
+    <string name="ime_sensitive_blocked">Đã tắt thao tác thử trong trường nhập liệu nhạy cảm.</string>
+    <string name="ime_ready">Sẵn sàng kiểm tra Rust JNI.</string>
+</resources>

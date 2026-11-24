@@ -2,19 +2,32 @@
 
 **Product:** KB-Ai  
 **Platform:** Android first  
-**Status:** Proposed specification; not implemented  
+**Status:** Phase 0 integration prototype; product input features remain planned  
 **Primary language:** Vietnamese  
 **Secondary language:** English
 
 ## 1. Product summary
 
-KB-Ai is an Android keyboard designed to combine accurate Vietnamese input, a familiar multi-tool keyboard experience, meaningful customization, and privacy-preserving defaults.
+KB-Ai is an independent Android keyboard designed to combine accurate Vietnamese input, a familiar multi-tool keyboard experience, meaningful customization, and privacy-preserving defaults.
 
-The product may study interaction patterns from Gboard, Laban Key, Microsoft SwiftKey, and Samsung Keyboard. It must develop its own visual identity and implementation. It must not copy proprietary assets, source code, private dictionaries, or branding.
+The product may study interaction patterns found in Gboard, Laban Key, Microsoft SwiftKey, and Samsung Keyboard. It must develop its own visual identity and implementation. It must not copy proprietary assets, source code, private dictionaries, or branding.
 
 The word "AI" in the project name is not a promise of cloud AI. The core keyboard must work without an account, network access, or remote text processing.
 
-## 2. Target users and primary jobs
+## 2. Current status
+
+The repository currently has a Phase 0 integration prototype:
+
+- Android app shell and onboarding shortcuts.
+- Test text field.
+- Test-only InputMethodService.
+- Kotlin-to-Rust JNI status call.
+- Explicit insertion of a fixed diagnostic string from the test IME.
+- Basic password-field blocking for that test action.
+
+The prototype is not a usable keyboard. It does not yet implement QWERTY, Telex, VNI, suggestions, dictionaries, or the final UI.
+
+## 3. Target users and primary jobs
 
 ### Primary users
 
@@ -33,7 +46,7 @@ The word "AI" in the project name is not a promise of cloud AI. The core keyboar
 6. Access optional tools without overcrowding the typing surface.
 7. Understand and control what data the keyboard stores or accesses.
 
-## 3. Product principles
+## 4. Product principles
 
 | Principle | Requirement |
 |---|---|
@@ -46,11 +59,9 @@ The word "AI" in the project name is not a promise of cloud AI. The core keyboar
 | Progressive disclosure | Advanced tools belong in expandable panels, not permanently on the main key surface. |
 | Accessibility | Keys and tool controls must expose accessible labels and actions. |
 
-## 4. Scope
+## 5. Planned scope
 
-### 4.1 Core MVP
-
-The first usable milestone must include:
+### 5.1 Core keyboard milestone
 
 - Android IME registration and activation flow.
 - QWERTY letter layout.
@@ -61,13 +72,13 @@ The first usable milestone must include:
 - Number and symbol layouts.
 - Space, punctuation, Backspace, Shift, and editor action keys.
 - Composing text and commit behavior through InputConnection.
-- Basic candidate/composition display; dictionary-based prediction is not required for the first integration milestone.
-- Keyboard height setting with safe bounds.
+- Basic candidate/composition display.
+- Keyboard height setting.
 - Light, dark, and system appearance.
 - Correct handling of password and other sensitive input fields.
 - Local-only settings and privacy controls.
 
-### 4.2 Planned after the core is stable
+### 5.2 Planned after the core is stable
 
 - Dictionary packs and personal dictionary.
 - Word suggestions and autocorrection.
@@ -78,11 +89,11 @@ The first usable milestone must include:
 - One-handed and floating layouts.
 - Cursor gestures and swipe-to-delete.
 - Swipe typing.
-- GIF and sticker insertion, where the target editor supports the required MIME types.
-- Voice input, with the processing location disclosed.
+- GIF and sticker insertion where the target editor supports the required MIME types.
+- Voice input, with processing location disclosed.
 - Handwriting and translation.
 
-### 4.3 Explicit non-goals for the MVP
+### 5.3 Explicit non-goals for the first keyboard release
 
 - Cloud AI rewriting or chat.
 - Required account or sign-in.
@@ -90,32 +101,32 @@ The first usable milestone must include:
 - Typing telemetry or analytics.
 - Automatic clipboard monitoring.
 - Remote dictionaries or network-dependent Vietnamese input.
-- A desktop or iOS version.
+- Desktop or iOS version.
 - A promise of compatibility with every third-party editor.
 
-## 5. Functional requirements
+## 6. Functional requirements
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-001 | The user can enable KB-Ai through Android system settings. | MVP |
-| FR-002 | The user can select KB-Ai as the active IME. | MVP |
-| FR-003 | The keyboard can enter and commit ordinary text. | MVP |
-| FR-004 | The keyboard supports Vietnamese Telex. | MVP |
-| FR-005 | The keyboard supports Vietnamese VNI. | MVP |
-| FR-006 | The user can switch between Vietnamese and English. | MVP |
-| FR-007 | The keyboard supports letter, number, and symbol layouts. | MVP |
-| FR-008 | The keyboard responds to the editor's requested action key. | MVP |
-| FR-009 | The keyboard handles composing text and selection updates safely. | MVP |
-| FR-010 | Sensitive fields disable suggestions and learning. | MVP |
-| FR-011 | The user can select Light, Dark, or System appearance. | MVP |
-| FR-012 | The user can adjust keyboard height within supported bounds. | MVP |
-| FR-013 | The user can preview the keyboard before completing setup. | MVP |
+| FR-001 | The user can enable KB-Ai through Android system settings. | Core |
+| FR-002 | The user can select KB-Ai as the active IME. | Core |
+| FR-003 | The keyboard can enter and commit ordinary text. | Core |
+| FR-004 | The keyboard supports Vietnamese Telex. | Core |
+| FR-005 | The keyboard supports Vietnamese VNI. | Core |
+| FR-006 | The user can switch between Vietnamese and English. | Core |
+| FR-007 | The keyboard supports letter, number, and symbol layouts. | Core |
+| FR-008 | The keyboard responds to the editor's requested action key. | Core |
+| FR-009 | The keyboard handles composing text and selection updates safely. | Core |
+| FR-010 | Sensitive fields disable suggestions and learning. | Core |
+| FR-011 | The user can select Light, Dark, or System appearance. | Core |
+| FR-012 | The user can adjust keyboard height within supported bounds. | Core |
+| FR-013 | The user can preview the keyboard before completing setup. | Core |
 | FR-014 | The user can browse and search emoji. | Later |
 | FR-015 | The user can opt in to local clipboard history. | Later |
 | FR-016 | The user can create and save themes. | Later |
-| FR-017 | The user can use online media or translation tools only through explicit actions. | Later |
+| FR-017 | Online tools require an explicit action and clear data disclosure. | Later |
 
-## 6. Non-functional requirements
+## 7. Non-functional requirements
 
 - **Reliability:** no lost or duplicated characters during ordinary typing.
 - **Text integrity:** editing must not corrupt combining marks, surrogate pairs, or emoji sequences.
@@ -124,46 +135,17 @@ The first usable milestone must include:
 - **Privacy:** typed text must not appear in logs, analytics, crash reports, or network payloads.
 - **Accessibility:** keyboard keys and toolbar actions must expose meaningful semantics.
 - **Maintainability:** input rules must be testable without Android UI.
-- **Compatibility:** supported Android API levels and ABIs must be explicitly documented after the device baseline is selected.
-
-## 7. Primary user flows
-
-### First-time setup
-
-1. Open KB-Ai.
-2. Read a concise explanation of keyboard privacy.
-3. Open Android's system screen to enable KB-Ai.
-4. Open Android's system picker to select KB-Ai.
-5. Open the test field and verify input.
-6. Finish setup without requiring an account or network connection.
-
-### Vietnamese typing
-
-1. Focus a text field.
-2. Select Vietnamese and Telex or VNI.
-3. Enter a syllable.
-4. See the current composing text.
-5. Commit with Space, punctuation, or the editor action.
-6. Continue typing without changing already committed text unexpectedly.
-
-### Customization
-
-1. Open the KB-Ai app.
-2. Open Themes.
-3. Preview a built-in theme.
-4. Adjust supported properties.
-5. Save and apply the theme.
-6. Return to the keyboard and verify that the theme is applied.
+- **Compatibility:** supported Android API levels and ABIs must be explicitly documented.
 
 ## 8. Acceptance gates
 
-The MVP is not complete until:
+A usable keyboard release is not complete until:
 
-- Telex and VNI pass the maintained test corpus.
+- Telex and VNI pass a maintained test corpus.
 - Key input works in ordinary text, email, URL, numeric, and password fields.
 - Editor actions such as Search, Next, and Done are mapped appropriately.
 - Selection changes and editor lifecycle events do not corrupt composing state.
 - Unicode regression tests pass.
 - No typed content is written to logs or transmitted.
-- A physical Android device test has been completed.
+- Physical Android device testing is complete.
 - Known limitations are documented before a release is called stable.

@@ -1,5 +1,6 @@
 # Android / Gradle
 .gradle/
+.kotlin/
 **/build/
 local.properties
 .cxx/
@@ -16,7 +17,6 @@ captures/
 *.dex
 
 # Rust / Cargo
-target/
 **/target/
 
 # Local configuration and signing material

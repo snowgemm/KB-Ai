@@ -1,14 +1,29 @@
 # Test Plan
 
-**Status:** Planned. No application test suite exists yet.
+**Status:** Phase 0 test scaffolding exists; full keyboard tests are not implemented.
 
 ## 1. Test strategy
 
-Test the input engine independently from Android, then test the JNI boundary, Android editor adapter, full IME lifecycle, and real-device behavior.
+Test the Rust core independently from Android, then test the JNI boundary, Android editor adapter, full IME lifecycle, and real-device behavior.
 
 A passing unit-test suite is not sufficient to call an Android keyboard stable.
 
-## 2. Rust unit tests
+## 2. Tests implemented in Phase 0
+
+### Rust
+
+- A deterministic core status function is covered by a Rust unit test.
+- The JNI library exposes the status function through one native method.
+
+### Android
+
+- `EditorPolicyTest` covers ordinary text, password text variations, numeric passwords, and ordinary numeric fields.
+- The app includes a test input field and controls for opening Android IME settings and the system keyboard picker.
+- The test-only IME can call Rust and explicitly insert a fixed status string into a focused editor.
+
+These checks validate the initial integration seam. They do not test actual text transformation or a production keyboard layout.
+
+## 3. Rust tests required as the input engine is developed
 
 ### Vietnamese input
 
@@ -24,7 +39,7 @@ Maintain deterministic test vectors for:
 - Uppercase and capitalization.
 - Invalid or incomplete sequences.
 
-Representative vectors include:
+Representative vectors:
 
 | Input sequence | Expected result |
 |---|---|
@@ -56,7 +71,7 @@ Test session creation, key sequences, commit, reset, mode switch, backspace, edi
 
 Use property-based or fuzz testing for text transformations when a suitable test harness is added. Never seed tests with private user text.
 
-## 3. JNI tests
+## 4. JNI tests
 
 - Kotlin can load the native library on every supported ABI.
 - Each exported method validates its arguments.
@@ -66,7 +81,7 @@ Use property-based or fuzz testing for text transformations when a suitable test
 - Session handles cannot be used after destruction.
 - Repeated create/destroy cycles do not leak session state.
 
-## 4. Android integration tests
+## 5. Android integration tests
 
 Test at least these editor types:
 
@@ -93,7 +108,7 @@ Test lifecycle cases:
 - Switch to another IME and back.
 - Lose or replace the InputConnection.
 
-## 5. UI and accessibility tests
+## 6. UI and accessibility tests
 
 - Letter, number, and symbol layouts.
 - Number-row toggle.
@@ -105,7 +120,7 @@ Test lifecycle cases:
 - Touch target and contrast checks.
 - Font scaling and system animation settings.
 
-## 6. Privacy tests
+## 7. Privacy tests
 
 - Inspect the manifest for unnecessary permissions.
 - Search logs for typed content and composing text.
@@ -116,7 +131,7 @@ Test lifecycle cases:
 - Confirm clipboard is not read automatically.
 - Inspect crash and diagnostic payloads for content leakage.
 
-## 7. Performance tests
+## 8. Performance tests
 
 Record on physical devices:
 
@@ -131,7 +146,20 @@ Record p50 and p95 values, device model, Android version, ABI, build type, and t
 
 The synchronous key path must not perform file, database, network, or unbounded dictionary work.
 
-## 8. Device matrix
+## 9. CI checks
+
+The Phase 0 workflow is intended to run:
+
+- Rust formatting.
+- Rust tests.
+- Rust Clippy.
+- Android unit tests.
+- Debug APK assembly.
+- Native builds for ARM64 and x86_64.
+
+Workflow results must be checked before marking these gates as passed.
+
+## 10. Device matrix
 
 Before release, test:
 
@@ -141,19 +169,4 @@ Before release, test:
 - The minimum supported Android API level.
 - A current Android version available at release time.
 
-The minimum supported API level is intentionally undecided until the device baseline and dependencies are evaluated.
-
-## 9. CI plan
-
-When source code exists, add GitHub Actions checks for:
-
-- Rust formatting.
-- Rust tests.
-- Rust Clippy.
-- Android lint.
-- Android unit tests.
-- Debug build.
-- Native library builds for supported ABIs.
-- Dependency and license review.
-
-Do not add a workflow that claims to build an application before the actual Gradle and Cargo projects exist.
+The minimum supported API level is currently 23 for the Phase 0 prototype and should be re-evaluated before the production keyboard release.
