@@ -38,7 +38,7 @@ android {
         versionName = "0.1.0-alpha.1"
     }
 
-    sourceSets.getByName("main").jniLibs.srcDir(rustJniLibs)
+    sourceSets.getByName("main").jniLibs.directories.add(rustJniLibs.get().asFile.absolutePath)
 
     // AGP 9 provides built-in Kotlin support. The Kotlin JVM target follows
     // compileOptions.targetCompatibility; a separate Kotlin Android plugin
