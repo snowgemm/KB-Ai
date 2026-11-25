@@ -2,7 +2,7 @@
 
 **Product:** KB-Ai  
 **Platform:** Android first  
-**Status:** Phase 0 integration prototype; product input features remain planned  
+**Status:** Phase 1 functional QWERTY prototype; production keyboard features remain in progress  
 **Primary language:** Vietnamese  
 **Secondary language:** English
 
@@ -16,16 +16,18 @@ The word "AI" in the project name is not a promise of cloud AI. The core keyboar
 
 ## 2. Current status
 
-The repository currently has a Phase 0 integration prototype:
+The repository currently contains a Phase 1 functional QWERTY prototype:
 
-- Android app shell and onboarding shortcuts.
-- Test text field.
-- Test-only InputMethodService.
-- Kotlin-to-Rust JNI status call.
-- Explicit insertion of a fixed diagnostic string from the test IME.
-- Basic password-field blocking for that test action.
+- Android app with system IME setup shortcuts.
+- QWERTY alphabetic layout.
+- Shift, Backspace, Space, punctuation, and a symbol layout.
+- Numeric and phone layouts selected from editor input type.
+- Editor action labels and actions.
+- Test fields for text, email, URL, number, password, and multiline input.
+- Kotlin-to-Rust JNI status diagnostic.
+- Basic password and no-personalized-learning editor policies.
 
-The prototype is not a usable keyboard. It does not yet implement QWERTY, Telex, VNI, suggestions, dictionaries, or the final UI.
+This is not yet a production-ready keyboard. It does not implement Telex, VNI, composing text, dictionaries, predictions, clipboard history, emoji, or AI text tools. CI and physical-device verification are still required.
 
 ## 3. Target users and primary jobs
 
@@ -57,28 +59,36 @@ The prototype is not a usable keyboard. It does not yet implement QWERTY, Telex,
 | User control | Suggestions, learning, clipboard, and online tools must be independently controllable. |
 | Familiar, not copied | Use understandable keyboard conventions with an original KB-Ai visual identity. |
 | Progressive disclosure | Advanced tools belong in expandable panels, not permanently on the main key surface. |
-| Accessibility | Keys and tool controls must expose accessible labels and actions. |
+| Accessibility | Keys and toolbar actions must expose accessible labels and actions. |
 
 ## 5. Planned scope
 
-### 5.1 Core keyboard milestone
+### 5.1 Functional QWERTY prototype
 
 - Android IME registration and activation flow.
 - QWERTY letter layout.
-- Vietnamese Telex and VNI input modes.
-- English QWERTY mode.
-- Language and input-mode switching.
-- Optional number row.
-- Number and symbol layouts.
-- Space, punctuation, Backspace, Shift, and editor action keys.
-- Composing text and commit behavior through InputConnection.
-- Basic candidate/composition display.
-- Keyboard height setting.
-- Light, dark, and system appearance.
-- Correct handling of password and other sensitive input fields.
-- Local-only settings and privacy controls.
+- Shift and one-shot uppercase behavior.
+- Symbol layout.
+- Numeric layout for number/date-time editors.
+- Phone layout for phone editors.
+- Space, punctuation, Backspace, and editor action key.
+- Email and URL punctuation adjustments.
+- Test fields for common editor types.
+- Basic password and no-personalized-learning policy checks.
 
-### 5.2 Planned after the core is stable
+### 5.2 Core keyboard milestone still required
+
+- Vietnamese Telex and VNI input modes.
+- English and Vietnamese input-mode switching with correct state handling.
+- Composing text and candidate display.
+- Selection-aware editing and cursor controls.
+- Long-press alternatives.
+- Optional number row.
+- Keyboard height and appearance settings.
+- Robust Unicode and grapheme-aware deletion.
+- Correct handling of sensitive input fields across more editor variations.
+
+### 5.3 Planned after the core is stable
 
 - Dictionary packs and personal dictionary.
 - Word suggestions and autocorrection.
@@ -93,7 +103,7 @@ The prototype is not a usable keyboard. It does not yet implement QWERTY, Telex,
 - Voice input, with processing location disclosed.
 - Handwriting and translation.
 
-### 5.3 Explicit non-goals for the first keyboard release
+### 5.4 Explicit non-goals for the first stable keyboard release
 
 - Cloud AI rewriting or chat.
 - Required account or sign-in.
@@ -128,14 +138,14 @@ The prototype is not a usable keyboard. It does not yet implement QWERTY, Telex,
 
 ## 7. Non-functional requirements
 
-- **Reliability:** no lost or duplicated characters during ordinary typing.
-- **Text integrity:** editing must not corrupt combining marks, surrogate pairs, or emoji sequences.
-- **Performance:** no disk I/O, network I/O, dictionary loading, or unbounded work in the synchronous key path.
-- **Lifecycle:** starting, finishing, or switching an editor must not leak composing state into the next editor.
-- **Privacy:** typed text must not appear in logs, analytics, crash reports, or network payloads.
-- **Accessibility:** keyboard keys and toolbar actions must expose meaningful semantics.
-- **Maintainability:** input rules must be testable without Android UI.
-- **Compatibility:** supported Android API levels and ABIs must be explicitly documented.
+- Reliability: no lost or duplicated characters during ordinary typing.
+- Text integrity: editing must not corrupt combining marks, surrogate pairs, or emoji sequences.
+- Performance: no disk I/O, network I/O, dictionary loading, or unbounded work in the synchronous key path.
+- Lifecycle: starting, finishing, or switching an editor must not leak composing state into the next editor.
+- Privacy: typed text must not appear in logs, analytics, crash reports, or network payloads.
+- Accessibility: keyboard keys and toolbar actions must expose meaningful semantics.
+- Maintainability: input rules must be testable without Android UI.
+- Compatibility: supported Android API levels and ABIs must be explicitly documented.
 
 ## 8. Acceptance gates
 

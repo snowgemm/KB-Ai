@@ -1,6 +1,6 @@
 # Architecture
 
-**Status:** Android/Rust Phase 0 prototype in repository; production input engine not implemented.  
+**Status:** Phase 1 Kotlin QWERTY prototype; Rust core remains a minimal Phase 0 integration seam.  
 **Scope:** Android application and native Rust input engine.
 
 ## 1. Architectural goals
@@ -14,17 +14,20 @@
 
 ## 2. Current implementation boundary
 
-Phase 0 currently contains:
+The repository currently contains:
 
 - One Android application module.
-- One test-only InputMethodService.
-- A Kotlin NativeBridge wrapper.
-- A Rust workspace with `kb-core` and `kb-ai-native`.
-- One JNI method, `nativeStatus()`, that returns a fixed status string.
-- A button that can explicitly insert that fixed status string into a focused editor.
-- A basic password-field policy that disables the test insertion button.
+- A functional QWERTY InputMethodService.
+- Alphabetic, symbol, numeric, and phone keyboard layouts.
+- Direct text insertion through Android InputConnection.
+- Backspace through Android delete key events.
+- Editor action handling based on EditorInfo.
+- Test fields for text, email, URL, number, password, and multiline input.
+- A Kotlin NativeBridge wrapper and a Rust workspace with kb-core and kb-ai-native.
+- One JNI method, nativeStatus(), retained as a build/integration diagnostic.
+- Basic password and no-personalized-learning policy helpers.
 
-The current prototype is not a QWERTY keyboard. It does not implement Telex, VNI, composing text, cursor editing, candidates, dictionaries, or production keyboard layouts.
+The current keyboard commits ordinary characters directly. It does not yet implement Telex, VNI, composing text, candidates, dictionaries, or prediction.
 
 ## 3. System overview
 
@@ -32,25 +35,27 @@ The current prototype is not a QWERTY keyboard. It does not implement Telex, VNI
 flowchart TB
     USER["User"]
     subgraph ANDROID["Android / Kotlin"]
-        APP["Application and onboarding"]
-        SERVICE["Test InputMethodService"]
-        VIEW["Test-only IME View"]
-        ADAPTER["InputConnection call"]
+        APP["Application and IME setup"]
+        SERVICE["KeyboardInputMethodService"]
+        VIEW["QWERTY / symbols / numeric UI"]
+        POLICY["Editor policy"]
+        ADAPTER["InputConnection and key events"]
     end
     subgraph NATIVE["Rust native library"]
-        JNI["JNI: nativeStatus()"]
+        JNI["JNI: nativeStatus() diagnostic"]
         CORE["kb-core"]
     end
     USER --> APP
     USER --> SERVICE
+    SERVICE --> POLICY
     SERVICE --> VIEW
-    VIEW --> JNI
-    JNI --> CORE
     VIEW --> ADAPTER
-    ADAPTER -->|"commitText after explicit tap"| EDITOR["Focused Android editor"]
+    ADAPTER --> EDITOR["Focused Android editor"]
+    APP --> JNI
+    JNI --> CORE
 ~~~
 
-This is a Phase 0 smoke path. The future architecture will separate the editor adapter, keyboard UI, Rust input session, and Vietnamese engine more fully.
+The native diagnostic does not participate in the typing path. Android owns all editor mutations.
 
 ## 4. Ownership boundaries
 
@@ -76,26 +81,31 @@ Owns onboarding, system settings navigation, language configuration, appearance,
 
 ### IME service
 
-Uses Android InputMethodService. It creates and tears down input sessions, selects the appropriate keyboard layout, observes EditorInfo, and coordinates the keyboard view with the focused editor.
+Uses Android InputMethodService. It creates and tears down input sessions, selects the appropriate keyboard layout from EditorInfo, and coordinates the keyboard view with the focused editor.
 
 ### Keyboard UI
 
-Use custom Android Views for the active keyboard surface. The first version should favor accessible View controls over a single canvas that draws every key without an equivalent accessibility tree.
+The current prototype uses native Android Buttons arranged in rows. Keys expose content descriptions and have stable touch targets. This is intentionally simpler than a custom canvas so assistive technologies can discover individual keys.
 
 Jetpack Compose may be used for the settings application and theme editor. It is not required for the latency-sensitive IME surface.
 
 ### Editor adapter
 
-Keep InputConnection calls in Kotlin. The adapter is responsible for:
+Keep InputConnection calls in Kotlin. The current prototype uses:
 
-- setComposingText and commitText.
-- finishComposingText.
-- selection updates.
-- editor action keys.
-- bounded text queries required for a specific editing operation.
-- safely paired beginBatchEdit and endBatchEdit calls.
+- commitText for ordinary characters and spaces.
+- sendDownUpKeyEvents for Backspace and the default Enter behavior.
+- performEditorAction for Go, Search, Send, Next, Previous, and Done.
+- commitText with a newline for multiline Enter.
 
-Do not call InputConnection from a Rust worker thread. Balance a successful beginBatchEdit with endBatchEdit, including exceptional paths.
+The next editing milestone must add:
+
+- setComposingText and finishComposingText.
+- selection updates and reconciliation.
+- bounded text queries only for specific editing operations.
+- safely paired beginBatchEdit and endBatchEdit calls where batching is needed.
+
+Do not call InputConnection from a Rust worker thread.
 
 ## 6. Rust workspace
 
@@ -108,21 +118,15 @@ The current workspace intentionally contains only two crates:
 
 The Vietnamese engine, dictionary, prediction, and Unicode modules are not implemented yet. Add separate crates only when they have independent responsibilities and real tests.
 
-The native library is built as a shared library for Android and packaged by ABI.
-
 ## 7. JNI contract
 
-The only JNI operation currently implemented is:
+The only JNI operation currently implemented is NativeBridge.nativeStatus(): String.
 
-- `NativeBridge.nativeStatus(): String`
-
-It calls the Rust core and returns a fixed diagnostic string. It is not a keyboard input API.
-
-The intended future boundary will expose small typed operations for session creation, semantic key events, selection reconciliation, composition completion, and session destruction. Those APIs must not be documented as implemented until code and tests exist.
+It calls the Rust core and returns a fixed diagnostic string. It is not part of keyboard text entry.
 
 Do not pass Android framework objects, Views, Context, InputConnection, bitmaps, or whole editor contents to Rust.
 
-Use `EnvUnowned::with_env` and a controlled JNI error policy so Rust panics do not unwind across the JVM boundary. Validate any future JNI input lengths and enum values.
+Use EnvUnowned.with_env and a controlled JNI error policy so Rust panics do not unwind across the JVM boundary. Validate any future JNI input lengths and enum values.
 
 ## 8. Session lifecycle and synchronization — future requirement
 
@@ -141,7 +145,7 @@ Asynchronous candidate work must carry a session and revision identifier. Kotlin
 
 ### Synchronous path
 
-The future key-event path may perform only bounded input transformation and composing-state updates. It must not perform network or disk I/O, load large dictionaries, or wait for background work.
+The current key-event path performs bounded layout/state updates and an InputConnection operation. It does not perform disk or network I/O, load dictionaries, or wait for background suggestions.
 
 ### Background path
 
@@ -160,12 +164,11 @@ Requirements for the future editing engine:
 - Convert offsets explicitly at the Kotlin/JNI boundary.
 - Test combining marks, surrogate pairs, regional indicator flags, skin-tone modifiers, and zero-width-joiner emoji.
 - Do not normalize the entire external editor contents.
-- For backspace outside the composing buffer, use a bounded editor snapshot only when required, compute a safe UTF-16 deletion length, and do not persist or log the snapshot.
-- If an editor cannot provide a usable snapshot, use a conservative fallback and document its limitation.
+- For backspace outside the composing buffer, retain Android key-event behavior unless a tested grapheme-aware adapter is introduced.
 
 The unicode-segmentation crate is a candidate for grapheme-boundary work. Its suitability, version, and license must be checked before integration.
 
-## 11. Pinned Phase 0 toolchain
+## 11. Pinned toolchain
 
 | Component | Version / setting |
 |---|---|
@@ -186,7 +189,7 @@ The values are pinned in build files and CI. Re-evaluate them when changing the 
 
 ## 12. Build integration
 
-Gradle invokes cargo-ndk to build the Rust cdylib into a generated jniLibs directory. The generated libraries are packaged into the Android APK.
+Gradle invokes cargo-ndk from the Rust workspace to build the Rust cdylib into a generated jniLibs directory. The Android preBuild task depends on the native build task, and the generated directory is registered as a JNI library source.
 
 The Gradle wrapper distribution URL includes a SHA-256 checksum. The wrapper JAR is the official binary from the Gradle v9.9.2 source tag and its SHA-256 is recorded next to it.
 

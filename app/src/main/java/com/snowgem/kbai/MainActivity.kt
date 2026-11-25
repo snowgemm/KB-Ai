@@ -10,6 +10,7 @@ import android.text.InputType
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
@@ -36,14 +37,14 @@ class MainActivity : Activity() {
         addContent(content, title, 4)
 
         val phaseTitle = TextView(this).apply {
-            text = getString(R.string.phase0_title)
+            text = getString(R.string.phase1_title)
             textSize = 17f
             setTextColor(Color.rgb(40, 75, 52))
         }
-        addContent(content, phaseTitle, 14)
+        addContent(content, phaseTitle, 10)
 
         val description = TextView(this).apply {
-            text = getString(R.string.phase0_description)
+            text = getString(R.string.phase1_description)
             textSize = 15f
             setTextColor(Color.rgb(75, 88, 78))
         }
@@ -90,21 +91,56 @@ class MainActivity : Activity() {
 
         val testTitle = TextView(this).apply {
             text = getString(R.string.test_field_title)
-            textSize = 16f
+            textSize = 17f
             setTypeface(Typeface.DEFAULT, Typeface.BOLD)
             setTextColor(Color.rgb(24, 34, 27))
         }
         addContent(content, testTitle, 8)
 
-        val testField = EditText(this).apply {
-            hint = getString(R.string.test_field_hint)
-            minLines = 2
-            maxLines = 4
-            gravity = Gravity.TOP or Gravity.START
-            isSaveEnabled = false
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
-        }
-        addContent(content, testField, 10)
+        addTestField(
+            content,
+            R.string.test_text_label,
+            R.string.test_text_hint,
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES,
+            EditorInfo.IME_ACTION_NEXT
+        )
+        addTestField(
+            content,
+            R.string.test_email_label,
+            R.string.test_email_hint,
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
+            EditorInfo.IME_ACTION_NEXT
+        )
+        addTestField(
+            content,
+            R.string.test_url_label,
+            R.string.test_url_hint,
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI,
+            EditorInfo.IME_ACTION_NEXT
+        )
+        addTestField(
+            content,
+            R.string.test_number_label,
+            R.string.test_number_hint,
+            InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_SIGNED or
+                InputType.TYPE_NUMBER_FLAG_DECIMAL,
+            EditorInfo.IME_ACTION_NEXT
+        )
+        addTestField(
+            content,
+            R.string.test_password_label,
+            R.string.test_password_hint,
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD,
+            EditorInfo.IME_ACTION_DONE
+        )
+        addTestField(
+            content,
+            R.string.test_multiline_label,
+            R.string.test_multiline_hint,
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE,
+            EditorInfo.IME_ACTION_NONE,
+            multiline = true
+        )
 
         setContentView(ScrollView(this).apply {
             isFillViewport = true
@@ -118,6 +154,37 @@ class MainActivity : Activity() {
         })
 
         content.requestFocus()
+    }
+
+    private fun addTestField(
+        parent: LinearLayout,
+        labelResource: Int,
+        hintResource: Int,
+        inputType: Int,
+        imeAction: Int,
+        multiline: Boolean = false
+    ) {
+        val label = TextView(this).apply {
+            text = getString(labelResource)
+            textSize = 14f
+            setTextColor(Color.rgb(58, 70, 61))
+        }
+        addContent(parent, label, 4)
+
+        val field = EditText(this).apply {
+            hint = getString(hintResource)
+            this.inputType = inputType
+            imeOptions = imeAction
+            isSaveEnabled = false
+            if (multiline) {
+                minLines = 2
+                maxLines = 4
+                gravity = Gravity.TOP or Gravity.START
+            } else {
+                setSingleLine(true)
+            }
+        }
+        addContent(parent, field, 12)
     }
 
     private fun addContent(

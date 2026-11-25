@@ -1,6 +1,7 @@
 package com.snowgem.kbai
 
 import android.text.InputType
+import android.view.inputmethod.EditorInfo
 
 internal object EditorPolicy {
     fun isSensitive(inputType: Int): Boolean {
@@ -20,4 +21,8 @@ internal object EditorPolicy {
             else -> false
         }
     }
+
+    fun disablesPersonalization(inputType: Int, imeOptions: Int): Boolean =
+        isSensitive(inputType) ||
+            imeOptions and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING != 0
 }

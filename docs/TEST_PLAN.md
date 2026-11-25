@@ -1,6 +1,6 @@
 # Test Plan
 
-**Status:** Phase 0 test scaffolding exists; full keyboard tests are not implemented.
+**Status:** Phase 1 unit-test scaffolding exists; Android build and physical-device verification are pending.
 
 ## 1. Test strategy
 
@@ -8,7 +8,7 @@ Test the Rust core independently from Android, then test the JNI boundary, Andro
 
 A passing unit-test suite is not sufficient to call an Android keyboard stable.
 
-## 2. Tests implemented in Phase 0
+## 2. Tests implemented in source
 
 ### Rust
 
@@ -17,11 +17,13 @@ A passing unit-test suite is not sufficient to call an Android keyboard stable.
 
 ### Android
 
-- `EditorPolicyTest` covers ordinary text, password text variations, numeric passwords, and ordinary numeric fields.
-- The app includes a test input field and controls for opening Android IME settings and the system keyboard picker.
-- The test-only IME can call Rust and explicitly insert a fixed status string into a focused editor.
+- EditorPolicy tests cover ordinary text, password variations, numeric passwords, and the no-personalized-learning editor flag.
+- KeyboardLayoutPolicy tests cover text, numeric, and phone input types.
+- The app includes sample text, email, URL, number, password, and multiline fields.
+- The QWERTY IME includes alphabetic, symbols, numeric, and phone layouts.
+- The IME maps common editor actions to their requested actions.
 
-These checks validate the initial integration seam. They do not test actual text transformation or a production keyboard layout.
+Source presence is not evidence that these checks pass; inspect the latest CI result before marking them passed.
 
 ## 3. Rust tests required as the input engine is developed
 
@@ -111,11 +113,11 @@ Test lifecycle cases:
 ## 6. UI and accessibility tests
 
 - Letter, number, and symbol layouts.
-- Number-row toggle.
-- Toolbar open/close.
+- Shift and one-shot uppercase.
+- Toolbar open/close when implemented.
 - Portrait and landscape.
 - Small and large display sizes.
-- Theme and keyboard-height persistence.
+- Theme and keyboard-height persistence when implemented.
 - TalkBack labels and actions.
 - Touch target and contrast checks.
 - Font scaling and system animation settings.
@@ -136,7 +138,7 @@ Test lifecycle cases:
 Record on physical devices:
 
 - Time from IME request to first usable keyboard frame.
-- Key-event processing time, including the JNI boundary.
+- Key-event processing time, including the JNI boundary if used.
 - UI frame timing during rapid typing.
 - Memory after repeated editor sessions.
 - Native library load time.
@@ -148,7 +150,7 @@ The synchronous key path must not perform file, database, network, or unbounded 
 
 ## 9. CI checks
 
-The Phase 0 workflow is intended to run:
+The workflow is intended to run:
 
 - Rust formatting.
 - Rust tests.
@@ -169,4 +171,4 @@ Before release, test:
 - The minimum supported Android API level.
 - A current Android version available at release time.
 
-The minimum supported API level is currently 23 for the Phase 0 prototype and should be re-evaluated before the production keyboard release.
+The minimum supported API level is currently 23 for the prototype and should be re-evaluated before the production keyboard release.

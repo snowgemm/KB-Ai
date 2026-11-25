@@ -38,11 +38,14 @@ android {
         versionName = "0.1.0-alpha.1"
     }
 
-    sourceSets.getByName("main").jniLibs.directories.add(rustJniLibs.get().asFile.absolutePath)
+    // The generated directory is resolved here; preBuild depends on the task
+    // that creates it, so it is populated before Android packages JNI libraries.
+    sourceSets.getByName("main").jniLibs.directories.add(
+        rustJniLibs.get().asFile.absolutePath
+    )
 
     // AGP 9 provides built-in Kotlin support. The Kotlin JVM target follows
-    // compileOptions.targetCompatibility; a separate Kotlin Android plugin
-    // must not be applied with AGP 9's built-in Kotlin support.
+    // compileOptions.targetCompatibility; do not also apply the legacy Kotlin plugin.
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -56,6 +59,8 @@ dependencies {
 tasks.register<Exec>("buildRustAndroid") {
     group = "build"
     description = "Build the Rust JNI library for ARM64 Android devices and x86_64 emulators."
+
+    workingDir(rustWorkspace)
 
     inputs.files(fileTree(rustWorkspace) {
         include("Cargo.toml")
@@ -89,7 +94,7 @@ tasks.register<Exec>("buildRustAndroid") {
         "-o", rustJniLibs.get().asFile.absolutePath,
         "build",
         "--release",
-        "--manifest-path", rustWorkspace.resolve("Cargo.toml").absolutePath
+        "--workspace"
     )
 }
 

@@ -1,8 +1,8 @@
 # Technical References
 
-This page records primary documentation reviewed for the proposed architecture and the Phase 0 build. Versions and recommendations must be rechecked when implementation begins.
+This page records primary documentation reviewed for the proposed architecture and the current implementation. Versions and recommendations must be rechecked when implementation changes.
 
-**Last reviewed:** 2026-11-24
+**Last reviewed:** 2026-11-25
 
 ## Android input methods
 
@@ -14,7 +14,7 @@ This page records primary documentation reviewed for the proposed architecture a
 - [Android Gradle Plugin release information](https://developer.android.com/build/releases/about-agp) — AGP / Gradle compatibility and built-in Kotlin support.
 - [Android Photo Picker](https://developer.android.com/training/data-storage/shared/photopicker) — user-selected image access for future local keyboard themes.
 
-## Pinned Phase 0 toolchain
+## Pinned toolchain
 
 | Component | Selected version | Primary reference |
 |---|---|---|
@@ -29,7 +29,7 @@ This page records primary documentation reviewed for the proposed architecture a
 | cargo-ndk | 4.1.2 | [cargo-ndk repository](https://github.com/bbqsrc/cargo-ndk/tree/v4.1.2) |
 | JNI crate | 0.22.4 | [jni crate documentation](https://docs.rs/jni/0.22.4/jni/) |
 
-AGP 9 supplies built-in Kotlin support. Do not also apply the legacy `org.jetbrains.kotlin.android` plugin to this project.
+AGP 9 supplies built-in Kotlin support. Do not also apply the legacy org.jetbrains.kotlin.android plugin to this project.
 
 ## Rust and Android native integration
 

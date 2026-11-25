@@ -2,31 +2,29 @@
 
 Thank you for considering a contribution.
 
-KB-Ai currently has a Phase 0 Android/Rust integration prototype. It is not yet a production keyboard and does not yet implement QWERTY, Telex, VNI, or prediction.
+KB-Ai currently has a Phase 1 functional QWERTY prototype. Vietnamese Telex, VNI, prediction, and production release hardening are not complete.
 
 ## Before starting
 
-1. Read the [Product Specification](docs/PRODUCT_SPEC.md).
-2. Read the [Architecture](docs/ARCHITECTURE.md) and relevant [ADRs](docs/adr/).
-3. Check the [Roadmap](docs/ROADMAP.md) and existing GitHub issues.
+1. Read the Product Specification in docs/PRODUCT_SPEC.md.
+2. Read the Architecture in docs/ARCHITECTURE.md and relevant ADRs.
+3. Check the Roadmap in docs/ROADMAP.md and existing GitHub issues.
 4. For a new feature, discuss user value, privacy impact, platform requirements, and maintenance cost before implementation.
 
 Avoid adding dependencies or splitting modules without a clear technical reason.
 
 ## Toolchain
 
-Use the versions recorded in the README and `rust-toolchain.toml`. Android SDK Platform 37, Build Tools 37.0.0, NDK 30.0.16248370, JDK 17, Rust 1.100.0, and cargo-ndk 4.1.2 are required for the current prototype.
+Use the versions recorded in the README and rust-toolchain.toml. The current prototype uses Android SDK Platform 36, Build Tools 36.0.0, NDK 30.0.16248370, JDK 17, Rust 1.100.0, and cargo-ndk 4.1.2.
 
 ## Local validation
 
-```sh
-cargo fmt --all --manifest-path native/Cargo.toml -- --check
-cargo test --workspace --manifest-path native/Cargo.toml
-cargo clippy --workspace --manifest-path native/Cargo.toml --all-targets -- -D warnings
-./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug
-```
+    cargo fmt --all --manifest-path native/Cargo.toml -- --check
+    cargo test --workspace --manifest-path native/Cargo.toml
+    cargo clippy --workspace --manifest-path native/Cargo.toml --all-targets -- -D warnings
+    ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug
 
-On Windows, use `gradlew.bat` for the last command. These commands are the expected checks; report their actual results rather than assuming they passed.
+On Windows, use gradlew.bat for the last command. These commands are the expected checks; report their actual results rather than assuming they passed.
 
 ## Contribution expectations
 
@@ -70,4 +68,4 @@ Use Conventional Commits where practical:
 
 ## Security reports
 
-Do not disclose vulnerabilities in public issues. Follow the private reporting guidance in [SECURITY.md](SECURITY.md).
+Do not disclose vulnerabilities in public issues. Follow the private reporting guidance in SECURITY.md.

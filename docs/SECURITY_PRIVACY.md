@@ -1,6 +1,6 @@
 # Security and Privacy Design
 
-**Status:** Requirements documented. Phase 0 prototype behavior is limited; full verification is pending.
+**Status:** Phase 1 implementation has a small local-only input path. Full security and privacy verification is pending.
 
 ## 1. Threat model
 
@@ -10,17 +10,20 @@ KB-Ai must assume that users may enter passwords, authentication codes, private 
 
 The design follows data minimization: do not collect information that the keyboard does not need to provide the requested input behavior.
 
-## 2. Phase 0 behavior
+## 2. Current Phase 1 behavior
 
-The current test prototype:
+The current source:
 
 - Does not request Android Internet permission.
+- Uses InputConnection to insert the key the user explicitly presses.
 - Does not read the text already present in the focused editor.
 - Does not read or monitor Clipboard content.
 - Does not store typing history or composing text.
-- Only inserts a fixed, non-user-derived diagnostic string after an explicit button tap.
-- Disables that test insertion button for recognized password and numeric-password fields.
-- Does not implement learning, suggestions, analytics, or network services.
+- Does not implement suggestions, personalization, or learning.
+- Does not implement analytics or network services.
+- Includes tested policy helpers for password fields and the editor no-personalized-learning flag.
+
+The QWERTY prototype is not yet a stable daily-use keyboard. Do not use it for real passwords or other sensitive information until the release privacy and device-test gates are complete.
 
 This is a source-level design description. CI and device testing must still verify the implementation.
 
@@ -28,24 +31,24 @@ This is a source-level design description. CI and device testing must still veri
 
 | Data | Default behavior |
 |---|---|
-| Text entered in an editor | Process only as required for the active input session; do not persist |
-| Composing buffer | Keep in memory for the active session; clear on finish/reset |
+| Text entered in an editor | Insert only the key explicitly pressed; do not persist |
+| Composing buffer | Not implemented in the current prototype |
 | Typing history | Not collected |
-| Personalized learning | Off |
+| Personalized learning | Not implemented |
 | Password content | Never learn, suggest from, log, or persist |
 | Clipboard | No automatic monitoring |
-| Clipboard history | Not in MVP; opt-in if introduced |
+| Clipboard history | Not implemented; opt-in if introduced |
 | Personal dictionary | Later, local-only and user-controlled |
 | Theme images | Local user-selected content |
 | Analytics / telemetry | Not included |
 | Cloud synchronization | Not included |
-| Network access | Not required for the core MVP |
+| Network access | Not required for the current keyboard |
 
 ## 4. Sensitive editor fields
 
-Kotlin must derive an EditorPolicy from EditorInfo inputType and imeOptions.
+Kotlin derives the keyboard layout from EditorInfo inputType. EditorPolicy provides helpers for detecting password variations and the no-personalized-learning request.
 
-At minimum:
+At minimum, future candidate or learning features must obey these rules:
 
 - Password and visible-password variations disable candidates and learning.
 - Numeric password and PIN-like fields use a suitable numeric layout and private behavior.
@@ -54,6 +57,8 @@ At minimum:
 - The policy must be reset when the editor session changes.
 
 Android's IME_FLAG_NO_PERSONALIZED_LEARNING is a request from the editor. KB-Ai must respect it; it is not a substitute for detecting password input types.
+
+The current prototype has no candidate or learning engine, so the policy is prepared and unit-tested ahead of those features.
 
 ## 5. Logging and diagnostics
 
@@ -71,7 +76,7 @@ Debug builds must follow the same no-typed-content rule.
 
 ## 6. Clipboard
 
-The MVP does not implement clipboard history.
+The current prototype does not implement clipboard history.
 
 If clipboard history is added later:
 
@@ -85,7 +90,7 @@ If clipboard history is added later:
 
 ## 7. Network and online features
 
-The core MVP should not request the Android Internet permission.
+The core keyboard should not request the Android Internet permission.
 
 A later online feature must have:
 
