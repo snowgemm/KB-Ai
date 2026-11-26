@@ -4,7 +4,7 @@ These executable checks protect KB-Ai's highest-risk boundaries: the keyboard's 
 
 ## Enforced invariants
 
-1. The core keyboard manifest requests no Android permissions. In particular, it must not gain Internet access by accident.
+1. The core keyboard manifest requests no Android permissions. The guard checks both `uses-permission` and API-scoped `uses-permission-sdk-23` declarations, so a permission cannot be introduced through an alternate manifest element.
 2. The exported input-method service remains protected by `android.permission.BIND_INPUT_METHOD`.
 3. The Rust composition engine keeps Bamboo Core full-text tracking disabled.
 4. The JNI boundary validates Unicode scalar values and looks up live session handles before processing input.

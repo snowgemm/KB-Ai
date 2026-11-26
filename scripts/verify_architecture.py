@@ -17,7 +17,8 @@ def check_architecture(root: Path) -> list[str]:
 
     permissions = [
         node.attrib.get(ANDROID_NS + "name", "<unnamed>")
-        for node in manifest.findall("uses-permission")
+        for node in manifest
+        if node.tag.rsplit("}", 1)[-1].startswith("uses-permission")
     ]
     if permissions:
         failures.append(f"core keyboard must remain permission-free; found {permissions}")

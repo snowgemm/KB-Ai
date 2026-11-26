@@ -61,6 +61,16 @@ class KbAiArchitectureGuardTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temp_dir.cleanup()
 
+    def test_rejects_sdk_scoped_permission_declaration(self) -> None:
+        manifest = self.root / "app/src/main/AndroidManifest.xml"
+        content = manifest.read_text(encoding="utf-8").replace(
+            "<application>",
+            '<uses-permission-sdk-23 android:name="android.permission.READ_CONTACTS" />\n'
+            "  <application>",
+        )
+        manifest.write_text(content, encoding="utf-8")
+        self.assertTrue(any("permission-free" in item for item in check_architecture(self.root)))
+
     def test_accepts_valid_privacy_and_native_boundary_fixture(self) -> None:
         self.assertEqual(check_architecture(self.root), [])
 
