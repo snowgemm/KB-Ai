@@ -1,11 +1,14 @@
 package com.snowgem.kbai
 
+import android.animation.ValueAnimator
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.inputmethodservice.InputMethodService
+import android.os.Build
 import android.text.InputType
 import android.view.Gravity
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -377,6 +380,7 @@ class KeyboardInputMethodService : InputMethodService() {
                 )
                 setTextColor(Color.rgb(27, 38, 30))
                 setOnClickListener { key.action() }
+                attachKeyPressFeedback(this)
             }
             row.addView(
                 button,
@@ -392,6 +396,38 @@ class KeyboardInputMethodService : InputMethodService() {
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
         )
+    }
+
+
+    private fun attachKeyPressFeedback(button: Button) {
+        button.setOnTouchListener { view, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> animateKeyPress(view, pressed = true)
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL,
+                MotionEvent.ACTION_OUTSIDE -> animateKeyPress(view, pressed = false)
+            }
+            false
+        }
+    }
+
+    private fun animateKeyPress(view: View, pressed: Boolean) {
+        val animationsEnabled = Build.VERSION.SDK_INT < Build.VERSION_CODES.O || ValueAnimator.areAnimatorsEnabled()
+        val scale = KeyPressMotionPolicy.scale(
+            pressed = pressed,
+            animationsEnabled = animationsEnabled
+        )
+        view.animate().cancel()
+        view.animate()
+            .scaleX(scale)
+            .scaleY(scale)
+            .setDuration(
+                KeyPressMotionPolicy.durationMillis(
+                    pressed = pressed,
+                    animationsEnabled = animationsEnabled
+                )
+            )
+            .start()
     }
 
     private fun insertText(value: String) {
