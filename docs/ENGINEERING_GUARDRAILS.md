@@ -24,6 +24,8 @@ Each implementation task must pass these behavioral evaluations:
 - **Regression:** existing Rust and Android tests pass, with new tests for changed behavior.
 - **Evidence:** CI/build results are real and physical-device behavior is not claimed without device testing.
 
+The architecture guard is mutation-tested with valid and intentionally broken fixtures. The tests prove that added Android permissions, removal of Bamboo full-text tracking protection, removal of the IME binding permission, and missing Unicode validation are rejected.
+
 ## Required verification
 
 ```bash
