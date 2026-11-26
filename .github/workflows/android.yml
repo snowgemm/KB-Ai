@@ -7,6 +7,7 @@ on:
     paths:
       - "app/**"
       - "native/**"
+      - "scripts/**"
       - "gradle/**"
       - ".github/workflows/android.yml"
       - "*.gradle.kts"
@@ -18,6 +19,7 @@ on:
     paths:
       - "app/**"
       - "native/**"
+      - "scripts/**"
       - "gradle/**"
       - ".github/workflows/android.yml"
       - "*.gradle.kts"
