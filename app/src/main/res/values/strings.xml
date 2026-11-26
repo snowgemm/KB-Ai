@@ -3,13 +3,13 @@
     <string name="app_name">KB-Ai</string>
     <string name="ime_name">KB-Ai Keyboard</string>
     <string name="app_title">KB-Ai</string>
-    <string name="phase1_title">Bàn phím QWERTY thử nghiệm</string>
-    <string name="phase1_description">KB-Ai đã có bàn phím QWERTY cơ bản. Hãy bật KB-Ai trong Cài đặt, chọn bàn phím rồi thử các ô bên dưới. Telex, VNI và gợi ý từ chưa được triển khai.</string>
+    <string name="phase1_title">Bàn phím tiếng Việt · Telex + VNI</string>
+    <string name="phase1_description">KB-Ai hỗ trợ gõ tiếng Việt bằng Telex và VNI, có thể chuyển VI/EN bằng phím ngôn ngữ. Bật KB-Ai trong Cài đặt rồi thử các ô bên dưới. Gợi ý từ, tự sửa và AI chưa có. Không dùng ô mật khẩu thử nghiệm cho thông tin thật.</string>
     <string name="open_ime_settings">Bật KB-Ai trong Cài đặt</string>
     <string name="show_ime_picker">Chọn bàn phím KB-Ai</string>
     <string name="test_field_title">Kiểm tra trong các loại ô nhập</string>
-    <string name="test_text_label">Văn bản</string>
-    <string name="test_text_hint">Nhập văn bản thường</string>
+    <string name="test_text_label">Văn bản (Telex + VNI)</string>
+    <string name="test_text_hint">Thử tieengs Vieetj hoặc tie6ng1 Vie6t5</string>
     <string name="test_email_label">Email</string>
     <string name="test_email_hint">name@example.com</string>
     <string name="test_url_label">Địa chỉ web</string>
@@ -17,7 +17,7 @@
     <string name="test_number_label">Số thập phân</string>
     <string name="test_number_hint">Nhập số</string>
     <string name="test_password_label">Mật khẩu (ô thử nghiệm)</string>
-    <string name="test_password_hint">Không dùng mật khẩu thật để kiểm tra</string>
+    <string name="test_password_hint">Chỉ dùng văn bản giả, không dùng mật khẩu thật</string>
     <string name="test_multiline_label">Văn bản nhiều dòng</string>
     <string name="test_multiline_hint">Nhập nhiều dòng tại đây</string>
     <string name="native_test_button">Kiểm tra kết nối Rust JNI</string>

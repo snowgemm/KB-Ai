@@ -1,7 +1,8 @@
 # ADR 0003: Local-first data boundaries
 
-- **Status:** Accepted for the MVP
+- **Status:** Accepted; initial implementation follows the local-only composition model
 - **Date:** 2026-11-24
+- **Implementation update:** 2026-11-26
 
 ## Context
 
@@ -11,17 +12,19 @@ The core keyboard does not need a server to transform Telex or VNI input.
 
 ## Decision
 
-The MVP will:
+The MVP:
 
-- Require no account.
-- Require no network permission for core typing.
-- Store no typing history.
-- Keep composing text in memory only for the active editor session.
-- Disable learning and candidates for password and sensitive fields.
-- Respect the editor's no-personalized-learning request.
-- Avoid automatic clipboard reads and clipboard history.
-- Exclude analytics and typed-content telemetry.
-- Keep settings local.
+- Requires no account.
+- Requires no Internet permission for core typing.
+- Stores no typing history.
+- Keeps the active composition in memory only for the current editor session.
+- Disables Bamboo Core full-text tracking so committed words and raw keystrokes are not retained in its committed-text buffers.
+- Does not create Vietnamese composition sessions for password, email, URL, numeric, or phone fields.
+- Does not implement learning or candidates yet.
+- Respects the editor's no-personalized-learning request for future learning features.
+- Avoids automatic clipboard reads and clipboard history.
+- Excludes analytics and typed-content telemetry.
+- Keeps settings local.
 
 ## Future feature gate
 
@@ -36,6 +39,8 @@ A feature that introduces network access, persistent user text, clipboard histor
 
 ## Consequences
 
-The MVP has fewer dependencies and a smaller data-collection surface. Advanced suggestions, synchronization, and online tools may be less capable until their privacy model is designed and approved.
+The current keyboard can transform Vietnamese text offline without storing completed words in the input engine. The active preedit must remain in memory long enough to support transformations and undo. Once committed or the editor session ends, the native session is finalized and destroyed.
 
-This ADR describes required behavior; implementation and verification are still pending.
+Advanced suggestions, synchronization, and online tools may be less capable until their privacy model is designed and approved.
+
+Physical-device and runtime verification remain required; this ADR is not a certification of privacy or security.

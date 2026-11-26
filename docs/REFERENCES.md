@@ -1,18 +1,27 @@
 # Technical References
 
-This page records primary documentation reviewed for the proposed architecture and the current implementation. Versions and recommendations must be rechecked when implementation changes.
+This page records primary documentation and dependencies reviewed for the current implementation. Versions and recommendations must be rechecked when implementation changes.
 
-**Last reviewed:** 2026-11-25
+**Last reviewed:** 2026-11-26
 
 ## Android input methods
 
 - [Create an input method](https://developer.android.com/develop/ui/views/touch-and-input/creating-input-method) — Android IME implementation guide.
 - [InputMethodService API](https://developer.android.com/reference/android/inputmethodservice/InputMethodService) — IME lifecycle and service API.
 - [InputConnection API](https://developer.android.com/reference/android/view/inputmethod/InputConnection) — composing, commit, selection, deletion, and editor interaction.
+- [InputConnection.setComposingText](https://developer.android.com/reference/android/view/inputmethod/InputConnection#setComposingText(java.lang.CharSequence,int)) — replaces the current composing span with the supplied preedit.
 - [EditorInfo API](https://developer.android.com/reference/android/view/inputmethod/EditorInfo) — editor type and IME options.
 - [Android 16 setup](https://developer.android.com/about/versions/16/setup-sdk) — stable API 36 SDK setup.
 - [Android Gradle Plugin release information](https://developer.android.com/build/releases/about-agp) — AGP / Gradle compatibility and built-in Kotlin support.
 - [Android Photo Picker](https://developer.android.com/training/data-storage/shared/photopicker) — user-selected image access for future local keyboard themes.
+
+## Vietnamese input engine
+
+- [Bamboo Core repository](https://github.com/bamboo-vi/bamboo-core) — Rust Vietnamese input method engine.
+- [Bamboo Core 0.6.1 on crates.io](https://crates.io/crates/bamboo-core/0.6.1) — exact dependency version used by kb-core.
+- [Bamboo Core documentation](https://docs.rs/bamboo-core/0.6.1/bamboo_core/) — Engine, InputMethod, Mode, Config, undo, and composing APIs.
+- [Bamboo Core CHANGELOG](https://github.com/bamboo-vi/bamboo-core/blob/master/CHANGELOG.md) — release-specific behavior and migration notes.
+- License: MIT. See upstream LICENSE and the KB-Ai third-party notices.
 
 ## Pinned toolchain
 
@@ -28,6 +37,7 @@ This page records primary documentation reviewed for the proposed architecture a
 | Rust | 1.100.0 | [Rust 1.100.0 release](https://blog.rust-lang.org/2026/11/12/Rust-1.100.0/) |
 | cargo-ndk | 4.1.2 | [cargo-ndk repository](https://github.com/bbqsrc/cargo-ndk/tree/v4.1.2) |
 | JNI crate | 0.22.4 | [jni crate documentation](https://docs.rs/jni/0.22.4/jni/) |
+| Bamboo Core | 0.6.1 | [crates.io](https://crates.io/crates/bamboo-core/0.6.1) |
 
 AGP 9 supplies built-in Kotlin support. Do not also apply the legacy org.jetbrains.kotlin.android plugin to this project.
 
@@ -42,7 +52,7 @@ AGP 9 supplies built-in Kotlin support. Do not also apply the legacy org.jetbrai
 ## Unicode
 
 - [Unicode Standard Annex #29](https://www.unicode.org/reports/tr29/) — grapheme, word, and sentence boundary rules.
-- [unicode-segmentation crate](https://docs.rs/unicode-segmentation/latest/unicode_segmentation/) — candidate Rust implementation of grapheme and word segmentation.
+- [unicode-segmentation crate](https://docs.rs/unicode-segmentation/latest/unicode_segmentation/) — candidate Rust implementation for future grapheme-aware editing.
 
 ## CI actions
 

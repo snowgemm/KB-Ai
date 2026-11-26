@@ -2,7 +2,7 @@
 
 **Product:** KB-Ai  
 **Platform:** Android first  
-**Status:** Phase 1 functional QWERTY prototype; production keyboard features remain in progress  
+**Status:** Telex/VNI integration prototype; production keyboard features remain in progress  
 **Primary language:** Vietnamese  
 **Secondary language:** English
 
@@ -14,20 +14,19 @@ The product may study interaction patterns found in Gboard, Laban Key, Microsoft
 
 The word "AI" in the project name is not a promise of cloud AI. The core keyboard must work without an account, network access, or remote text processing.
 
-## 2. Current status
+## 2. Current implementation
 
-The repository currently contains a Phase 1 functional QWERTY prototype:
+The current source contains:
 
-- Android app with system IME setup shortcuts.
-- QWERTY alphabetic layout.
-- Shift, Backspace, Space, punctuation, and a symbol layout.
-- Numeric and phone layouts selected from editor input type.
-- Editor action labels and actions.
-- Test fields for text, email, URL, number, password, and multiline input.
-- Kotlin-to-Rust JNI status diagnostic.
-- Basic password and no-personalized-learning editor policies.
+- Android QWERTY, symbols, numeric, and phone layouts.
+- Shift, Backspace, Space, punctuation, and editor actions.
+- VI/EN toggle in eligible text fields.
+- Bamboo Core 0.6.1 integration for combined Telex and VNI.
+- Live composing text through InputConnection.
+- Rust per-editor sessions, composition undo, commit, and destruction.
+- Password, email, URL, and numeric fields bypass the Vietnamese composition engine.
 
-This is not yet a production-ready keyboard. It does not implement Telex, VNI, composing text, dictionaries, predictions, clipboard history, emoji, or AI text tools. CI and physical-device verification are still required.
+This is not a production-ready keyboard. CI and physical-device verification are still required. It does not yet implement dictionaries, candidates, prediction, autocorrection, clipboard history, emoji search, or AI text tools.
 
 ## 3. Target users and primary jobs
 
@@ -59,34 +58,31 @@ This is not yet a production-ready keyboard. It does not implement Telex, VNI, c
 | User control | Suggestions, learning, clipboard, and online tools must be independently controllable. |
 | Familiar, not copied | Use understandable keyboard conventions with an original KB-Ai visual identity. |
 | Progressive disclosure | Advanced tools belong in expandable panels, not permanently on the main key surface. |
-| Accessibility | Keys and toolbar actions must expose accessible labels and actions. |
+| Accessibility | Keys and toolbar actions must expose accessible semantics. |
 
 ## 5. Planned scope
 
-### 5.1 Functional QWERTY prototype
+### 5.1 Current core typing scope
 
 - Android IME registration and activation flow.
 - QWERTY letter layout.
-- Shift and one-shot uppercase behavior.
-- Symbol layout.
-- Numeric layout for number/date-time editors.
-- Phone layout for phone editors.
-- Space, punctuation, Backspace, and editor action key.
-- Email and URL punctuation adjustments.
-- Test fields for common editor types.
-- Basic password and no-personalized-learning policy checks.
+- Vietnamese Telex and VNI composition through Bamboo Core.
+- VI/EN input-mode toggle.
+- Composing text, commit, and per-keystroke undo.
+- Number, phone, and symbol layouts.
+- Space, punctuation, Backspace, Shift, and editor action key.
+- Password, email, URL, and numeric field handling.
+- Local-only input processing.
 
-### 5.2 Core keyboard milestone still required
+### 5.2 Core keyboard work still required
 
-- Vietnamese Telex and VNI input modes.
-- English and Vietnamese input-mode switching with correct state handling.
-- Composing text and candidate display.
+- Expanded Telex and VNI test corpus.
 - Selection-aware editing and cursor controls.
 - Long-press alternatives.
-- Optional number row.
 - Keyboard height and appearance settings.
-- Robust Unicode and grapheme-aware deletion.
-- Correct handling of sensitive input fields across more editor variations.
+- Grapheme-aware deletion outside the active composition.
+- More editor compatibility and lifecycle tests.
+- Accessibility and responsive layout hardening.
 
 ### 5.3 Planned after the core is stable
 
@@ -97,15 +93,14 @@ This is not yet a production-ready keyboard. It does not implement Telex, VNI, c
 - Toolbar customization and multiple tool pages.
 - Theme editor and local image backgrounds.
 - One-handed and floating layouts.
-- Cursor gestures and swipe-to-delete.
 - Swipe typing.
 - GIF and sticker insertion where the target editor supports the required MIME types.
 - Voice input, with processing location disclosed.
 - Handwriting and translation.
+- User-triggered AI text operations.
 
 ### 5.4 Explicit non-goals for the first stable keyboard release
 
-- Cloud AI rewriting or chat.
 - Required account or sign-in.
 - Cloud synchronization of typed content.
 - Typing telemetry or analytics.
@@ -142,7 +137,7 @@ This is not yet a production-ready keyboard. It does not implement Telex, VNI, c
 - Text integrity: editing must not corrupt combining marks, surrogate pairs, or emoji sequences.
 - Performance: no disk I/O, network I/O, dictionary loading, or unbounded work in the synchronous key path.
 - Lifecycle: starting, finishing, or switching an editor must not leak composing state into the next editor.
-- Privacy: typed text must not appear in logs, analytics, crash reports, or network payloads.
+- Privacy: typed content must not appear in logs, analytics, crash reports, or network payloads.
 - Accessibility: keyboard keys and toolbar actions must expose meaningful semantics.
 - Maintainability: input rules must be testable without Android UI.
 - Compatibility: supported Android API levels and ABIs must be explicitly documented.

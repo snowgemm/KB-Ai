@@ -1,4 +1,4 @@
-name: Android Phase 0
+name: Android Keyboard Build and Test
 
 on:
   push:
@@ -31,12 +31,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: android-phase0
+  group: android-keyboard
   cancel-in-progress: true
 
 jobs:
   verify:
-    name: Build and test Phase 0
+    name: Build and test Android keyboard
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
@@ -75,6 +75,7 @@ jobs:
           echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
           echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_HOME=$SDK_ROOT/ndk/30.0.16248370" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_ROOT=$SDK_ROOT/ndk/30.0.16248370" >> "$GITHUB_ENV"
           echo "CARGO_NDK_PLATFORM=23" >> "$GITHUB_ENV"
 
       - name: Set up Rust 1.100.0
@@ -104,11 +105,11 @@ jobs:
       - name: Test and assemble Android app
         run: ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug
 
-      - name: Upload Phase 0 APK
+      - name: Upload debug APK
         if: success()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: kb-ai-phase0-debug
+          name: kb-ai-debug
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 7

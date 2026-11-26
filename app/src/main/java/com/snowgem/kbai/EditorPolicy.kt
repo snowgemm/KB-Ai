@@ -22,6 +22,18 @@ internal object EditorPolicy {
         }
     }
 
+    fun supportsVietnameseComposition(inputType: Int): Boolean {
+        if ((inputType and InputType.TYPE_MASK_CLASS) != InputType.TYPE_CLASS_TEXT) {
+            return false
+        }
+        if (isSensitive(inputType)) return false
+
+        val variation = inputType and InputType.TYPE_MASK_VARIATION
+        return variation != InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS &&
+            variation != InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS &&
+            variation != InputType.TYPE_TEXT_VARIATION_URI
+    }
+
     fun disablesPersonalization(inputType: Int, imeOptions: Int): Boolean =
         isSensitive(inputType) ||
             imeOptions and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING != 0

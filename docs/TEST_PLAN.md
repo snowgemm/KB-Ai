@@ -1,10 +1,10 @@
 # Test Plan
 
-**Status:** Phase 1 unit-test scaffolding exists; Android build and physical-device verification are pending.
+**Status:** Telex/VNI engine tests are included in source; CI and physical-device verification are pending.
 
 ## 1. Test strategy
 
-Test the Rust core independently from Android, then test the JNI boundary, Android editor adapter, full IME lifecycle, and real-device behavior.
+Test the Rust input engine independently from Android, then test the JNI boundary, Android editor adapter, full IME lifecycle, and real-device behavior.
 
 A passing unit-test suite is not sufficient to call an Android keyboard stable.
 
@@ -12,8 +12,19 @@ A passing unit-test suite is not sufficient to call an Android keyboard stable.
 
 ### Rust
 
-- A deterministic core status function is covered by a Rust unit test.
-- The JNI library exposes the status function through one native method.
+The kb-core wrapper currently tests:
+
+- Deterministic Phase 0 native status.
+- Telex composition: tieengs → tiếng and vieetj → việt.
+- VNI composition: tie6ng1 → tiếng and vie6t5 → việt.
+- Repeated tone-key restoration.
+- English bypass behavior for the word just.
+- Undo of the most recent physical keystroke.
+- Backspace delegation when there is no active composition.
+- Commit clearing the active preedit.
+- Reset clearing the active preedit.
+
+Bamboo Core itself supplies a broader upstream regression suite. KB-Ai must still maintain product-specific test vectors for any configuration or integration behavior it depends on.
 
 ### Android
 
@@ -25,9 +36,7 @@ A passing unit-test suite is not sufficient to call an Android keyboard stable.
 
 Source presence is not evidence that these checks pass; inspect the latest CI result before marking them passed.
 
-## 3. Rust tests required as the input engine is developed
-
-### Vietnamese input
+## 3. Vietnamese input corpus still required
 
 Maintain deterministic test vectors for:
 
@@ -36,47 +45,28 @@ Maintain deterministic test vectors for:
 - Repeated-key behavior and restoration rules.
 - Backspace during an unfinished syllable.
 - Space and punctuation commit behavior.
-- Switching input mode.
+- Switching between VI and EN mid-session.
 - Mixed Vietnamese and English text.
 - Uppercase and capitalization.
 - Invalid or incomplete sequences.
+- Forced composition-buffer word boundaries.
 
 Representative vectors:
 
-| Input sequence | Expected result |
-|---|---|
-| Telex: tieengs Vieetj | tiếng Việt |
-| VNI: tie6ng1 Vie6t5 | tiếng Việt |
-| Telex: aa | â |
-| Telex: aw | ă |
-| Telex: dd | đ |
+| Input method | Input | Expected result |
+|---|---|---|
+| Telex | tieengs | tiếng |
+| Telex | vieetj | việt |
+| VNI | tie6ng1 | tiếng |
+| VNI | vie6t5 | việt |
+| Telex | ass | as |
 
 The complete corpus must be reviewed and versioned. These examples are not a substitute for a full Vietnamese orthography test suite.
-
-### Unicode
-
-Test:
-
-- NFC and NFD examples.
-- Vietnamese combining marks.
-- Supplementary-plane characters.
-- Emoji with skin-tone modifiers.
-- Regional-indicator flag sequences.
-- Zero-width-joiner emoji sequences.
-- Grapheme-aware deletion.
-- UTF-8 to UTF-16 offset conversion.
-- Empty strings and malformed boundary inputs.
-
-### State machine
-
-Test session creation, key sequences, commit, reset, mode switch, backspace, editor changes, and stale revision rejection.
-
-Use property-based or fuzz testing for text transformations when a suitable test harness is added. Never seed tests with private user text.
 
 ## 4. JNI tests
 
 - Kotlin can load the native library on every supported ABI.
-- Each exported method validates its arguments.
+- Each exported method validates handles and character values.
 - Rust results map to Kotlin values deterministically.
 - Native errors are handled without crashing the IME.
 - No panic or unhandled Java exception crosses the boundary.
@@ -98,15 +88,17 @@ Test at least these editor types:
 - Fields with Next, Done, Search, and Send actions.
 - Editors with selection changes and cursor movement.
 
-Test lifecycle cases:
+Test lifecycle and composition cases:
 
-- Start input.
-- Finish input.
+- Start input and create a session.
+- Type Telex and VNI sequences.
+- Undo during an unfinished composition.
+- Commit with space and punctuation.
+- Switch VI/EN mode mid-word.
+- Move the caret and select text during composition.
 - Switch between applications.
-- Rotate the device.
-- Change orientation.
-- Recreate the keyboard view.
-- Change input mode while composing.
+- Finish input and destroy the session.
+- Rotate the device and recreate the keyboard view.
 - Switch to another IME and back.
 - Lose or replace the InputConnection.
 
@@ -114,7 +106,7 @@ Test lifecycle cases:
 
 - Letter, number, and symbol layouts.
 - Shift and one-shot uppercase.
-- Toolbar open/close when implemented.
+- VI/EN toggle visibility and action.
 - Portrait and landscape.
 - Small and large display sizes.
 - Theme and keyboard-height persistence when implemented.
@@ -126,7 +118,8 @@ Test lifecycle cases:
 
 - Inspect the manifest for unnecessary permissions.
 - Search logs for typed content and composing text.
-- Confirm password fields do not populate candidates.
+- Confirm password fields do not create native input sessions.
+- Confirm Bamboo full-text tracking is disabled.
 - Confirm no content is written to disk during ordinary typing.
 - Confirm core typing works without network access.
 - Confirm no network requests occur in the core MVP.
@@ -138,7 +131,7 @@ Test lifecycle cases:
 Record on physical devices:
 
 - Time from IME request to first usable keyboard frame.
-- Key-event processing time, including the JNI boundary if used.
+- Key-event processing time, including the JNI boundary.
 - UI frame timing during rapid typing.
 - Memory after repeated editor sessions.
 - Native library load time.

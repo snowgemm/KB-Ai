@@ -1,6 +1,6 @@
 # Architecture
 
-**Status:** Phase 1 Kotlin QWERTY prototype; Rust core remains a minimal Phase 0 integration seam.  
+**Status:** Telex/VNI Rust engine integrated in source; CI and physical-device verification are pending.  
 **Scope:** Android application and native Rust input engine.
 
 ## 1. Architectural goals
@@ -17,17 +17,16 @@
 The repository currently contains:
 
 - One Android application module.
-- A functional QWERTY InputMethodService.
-- Alphabetic, symbol, numeric, and phone keyboard layouts.
-- Direct text insertion through Android InputConnection.
-- Backspace through Android delete key events.
-- Editor action handling based on EditorInfo.
+- QWERTY, symbol, numeric, and phone layouts in a Kotlin InputMethodService.
+- VI/EN toggle for eligible text fields.
+- A Rust kb-core wrapper around Bamboo Core 0.6.1.
+- A Rust JNI library with per-editor session handles.
+- Telex and VNI composition through InputSession.
+- Android composing-text updates through InputConnection.setComposingText.
+- Per-key undo inside the active composition.
+- Explicit finish/commit at word boundaries and editor lifecycle boundaries.
 - Test fields for text, email, URL, number, password, and multiline input.
-- A Kotlin NativeBridge wrapper and a Rust workspace with kb-core and kb-ai-native.
-- One JNI method, nativeStatus(), retained as a build/integration diagnostic.
-- Basic password and no-personalized-learning policy helpers.
-
-The current keyboard commits ordinary characters directly. It does not yet implement Telex, VNI, composing text, candidates, dictionaries, or prediction.
+- Password, email, URL, and numeric fields bypass the Vietnamese composition engine.
 
 ## 3. System overview
 
@@ -39,23 +38,25 @@ flowchart TB
         SERVICE["KeyboardInputMethodService"]
         VIEW["QWERTY / symbols / numeric UI"]
         POLICY["Editor policy"]
-        ADAPTER["InputConnection and key events"]
+        ADAPTER["InputConnection composing API"]
     end
     subgraph NATIVE["Rust native library"]
-        JNI["JNI: nativeStatus() diagnostic"]
-        CORE["kb-core"]
+        JNI["JNI session API"]
+        SESSION["kb-core InputSession"]
+        BAMBOO["Bamboo Core 0.6.1"]
     end
     USER --> APP
     USER --> SERVICE
     SERVICE --> POLICY
     SERVICE --> VIEW
+    VIEW --> JNI
+    JNI --> SESSION
+    SESSION --> BAMBOO
     VIEW --> ADAPTER
     ADAPTER --> EDITOR["Focused Android editor"]
-    APP --> JNI
-    JNI --> CORE
 ~~~
 
-The native diagnostic does not participate in the typing path. Android owns all editor mutations.
+Kotlin owns editor mutations. Rust owns the active Vietnamese input composition. The Rust engine does not receive Android framework objects or the editor's full text.
 
 ## 4. Ownership boundaries
 
@@ -65,11 +66,13 @@ The native diagnostic does not participate in the typing path. Android owns all 
 | Current selection and editor action | Android editor / InputConnection |
 | InputMethodService lifecycle | Kotlin |
 | Keyboard layout and touch handling | Kotlin UI |
-| Future composing buffer and input-rule state | Rust session |
-| Vietnamese transformation rules | Rust |
+| Active Vietnamese composition | Rust InputSession |
+| Vietnamese transformation rules | Bamboo Core |
 | Theme and user preferences | Kotlin / DataStore |
 | Tool-panel visibility and navigation | Kotlin |
 | Clipboard data | Android Clipboard APIs; no history in MVP |
+
+Bamboo Core committed-text tracking is explicitly disabled. The engine retains only the active in-memory composition needed for transformations; committed words and raw keystrokes are not retained in its full-text buffers.
 
 No two layers should independently own and mutate the same data without an explicit synchronization contract.
 
@@ -81,71 +84,73 @@ Owns onboarding, system settings navigation, language configuration, appearance,
 
 ### IME service
 
-Uses Android InputMethodService. It creates and tears down input sessions, selects the appropriate keyboard layout from EditorInfo, and coordinates the keyboard view with the focused editor.
+Uses Android InputMethodService. It creates and destroys a Rust session per eligible editor input session, selects the appropriate layout from EditorInfo, observes selection changes, and coordinates the keyboard view with the focused editor.
 
 ### Keyboard UI
 
-The current prototype uses native Android Buttons arranged in rows. Keys expose content descriptions and have stable touch targets. This is intentionally simpler than a custom canvas so assistive technologies can discover individual keys.
-
-Jetpack Compose may be used for the settings application and theme editor. It is not required for the latency-sensitive IME surface.
+The current prototype uses native Android Buttons arranged in rows. Keys expose content descriptions and have stable touch targets. This keeps individual keys discoverable by assistive technologies.
 
 ### Editor adapter
 
-Keep InputConnection calls in Kotlin. The current prototype uses:
+Keep InputConnection calls in Kotlin.
 
-- commitText for ordinary characters and spaces.
-- sendDownUpKeyEvents for Backspace and the default Enter behavior.
-- performEditorAction for Go, Search, Send, Next, Previous, and Done.
-- commitText with a newline for multiline Enter.
+- setComposingText replaces the current composing span with the engine's latest preedit.
+- finishComposingText finalizes the active preedit.
+- commitText inserts literal punctuation, spaces, or characters that bypass the Vietnamese engine.
+- performEditorAction handles Go, Search, Send, Next, Previous, and Done.
+- sendDownUpKeyEvents is used for Backspace outside an active composition.
 
-The next editing milestone must add:
-
-- setComposingText and finishComposingText.
-- selection updates and reconciliation.
-- bounded text queries only for specific editing operations.
-- safely paired beginBatchEdit and endBatchEdit calls where batching is needed.
+The adapter observes selection updates. If the user moves the cursor or selection away from the composition end, it finalizes the composition rather than continuing to edit at a stale location.
 
 Do not call InputConnection from a Rust worker thread.
 
 ## 6. Rust workspace
 
-The current workspace intentionally contains only two crates:
-
 | Crate | Responsibility |
 |---|---|
-| kb-core | Minimal Phase 0 core status function; future input-session logic |
-| kb-ai-native | Android cdylib and JNI exports |
+| kb-core | Per-editor InputSession wrapper around Bamboo Core |
+| kb-ai-native | Android cdylib, JNI methods, and session registry |
+| bamboo-core 0.6.1 | Upstream Telex/VNI transformation engine |
 
-The Vietnamese engine, dictionary, prediction, and Unicode modules are not implemented yet. Add separate crates only when they have independent responsibilities and real tests.
+The Rust wrapper creates a combined Telex + VNI engine and disables extended phonetic onsets by default to reduce accidental transformations of ordinary English words beginning with f, j, or w.
+
+Bamboo's full-text tracking is disabled. The wrapper returns a borrowed preedit slice; the JNI layer creates the Java string while the session lock is held, avoiding an additional owned Rust String allocation on each printable key.
 
 ## 7. JNI contract
 
-The only JNI operation currently implemented is NativeBridge.nativeStatus(): String.
+The JNI methods are:
 
-It calls the Rust core and returns a fixed diagnostic string. It is not part of keyboard text entry.
+- nativeCreateSession(): Long
+- nativeProcessKey(handle, codePoint, vietnamese): String
+- nativeWasForcedCommit(handle): Boolean
+- nativeUndoKey(handle): String
+- nativeCommit(handle): Unit
+- nativeDestroySession(handle): Unit
+- nativeStatus(): String (diagnostic)
+
+Session handles are generated in native code and stored in a process-local registry. They are removed when the editor input session finishes or the service is destroyed.
 
 Do not pass Android framework objects, Views, Context, InputConnection, bitmaps, or whole editor contents to Rust.
 
-Use EnvUnowned.with_env and a controlled JNI error policy so Rust panics do not unwind across the JVM boundary. Validate any future JNI input lengths and enum values.
+## 8. Session lifecycle and synchronization
 
-## 8. Session lifecycle and synchronization — future requirement
+- Create a Rust session for eligible text fields.
+- Do not create a Vietnamese composition session for password, email, URL, numeric, or phone fields.
+- Keep the active composition in the Rust session only while it belongs to the current editor.
+- Finish composing text when punctuation or space is committed, language mode changes, or the editor session ends.
+- Observe selection changes; finalize composition if the caret moves outside its expected end position.
+- Destroy the Rust session when input finishes or the service is destroyed.
+- Never carry a composition buffer from one editor to another.
 
-- Create or reset the Rust session when an editor input session starts.
-- Read the field's input type and IME options in Kotlin.
-- Apply an EditorPolicy before enabling candidates, learning, or layout-specific behavior.
-- Keep composing text in Rust only while it belongs to the active editor.
-- Observe selection changes through IME lifecycle callbacks.
-- If the cursor moves outside the composing range, invalidate or safely reconcile the current composition.
-- Finish composition and release session resources when input finishes.
-- Never carry a composing buffer from one editor to another.
-
-Asynchronous candidate work must carry a session and revision identifier. Kotlin must discard results whose revision no longer matches the active session.
+The Rust composition buffer is bounded. Bamboo can signal a forced word boundary; Kotlin must finish the old composing span before applying the new preedit.
 
 ## 9. Threading and performance
 
 ### Synchronous path
 
-The current key-event path performs bounded layout/state updates and an InputConnection operation. It does not perform disk or network I/O, load dictionaries, or wait for background suggestions.
+The key path performs bounded text transformation, a session lookup, a JNI call, and an InputConnection operation. It performs no disk or network I/O and does not load dictionaries.
+
+The Rust engine reuses its internal preedit buffer. JNI still creates a Java String for Android's composing API, but the wrapper avoids an additional owned Rust String per key.
 
 ### Background path
 
@@ -157,6 +162,8 @@ Record actual p50/p95 timing and memory measurements on physical devices before 
 
 Rust strings use UTF-8 byte offsets. Android text APIs use UTF-16 code-unit offsets. Unicode code points and grapheme clusters are different units.
 
+The current letter-key path sends one Unicode scalar value per call and uses the complete preedit string in setComposingText. Advanced cursor movement and grapheme-aware deletion outside the active preedit remain future work.
+
 Requirements for the future editing engine:
 
 - Never use a Rust byte offset directly as an Android selection or deletion length.
@@ -164,9 +171,6 @@ Requirements for the future editing engine:
 - Convert offsets explicitly at the Kotlin/JNI boundary.
 - Test combining marks, surrogate pairs, regional indicator flags, skin-tone modifiers, and zero-width-joiner emoji.
 - Do not normalize the entire external editor contents.
-- For backspace outside the composing buffer, retain Android key-event behavior unless a tested grapheme-aware adapter is introduced.
-
-The unicode-segmentation crate is a candidate for grapheme-boundary work. Its suitability, version, and license must be checked before integration.
 
 ## 11. Pinned toolchain
 
@@ -175,7 +179,7 @@ The unicode-segmentation crate is a candidate for grapheme-boundary work. Its su
 | JDK | 17 |
 | Gradle Wrapper | 9.9.2 |
 | Android Gradle Plugin | 9.5.2 |
-| Kotlin | AGP 9 built-in Kotlin support; do not apply the legacy Kotlin Android plugin |
+| Kotlin | AGP 9 built-in Kotlin support |
 | Compile SDK | 36 |
 | Build Tools | 36.0.0 |
 | Target SDK | 36 |
@@ -184,20 +188,18 @@ The unicode-segmentation crate is a candidate for grapheme-boundary work. Its su
 | Rust | 1.100.0 |
 | cargo-ndk | 4.1.2 |
 | Android ABI | arm64-v8a and x86_64 |
-
-The values are pinned in build files and CI. Re-evaluate them when changing the supported device baseline or Android release target.
+| Bamboo Core | 0.6.1 |
 
 ## 12. Build integration
 
-Gradle invokes cargo-ndk from the Rust workspace to build the Rust cdylib into a generated jniLibs directory. The Android preBuild task depends on the native build task, and the generated directory is registered as a JNI library source.
-
-The Gradle wrapper distribution URL includes a SHA-256 checksum. The wrapper JAR is the official binary from the Gradle v9.9.2 source tag and its SHA-256 is recorded next to it.
+Gradle invokes cargo-ndk from the Rust workspace to build the JNI cdylib into a generated jniLibs directory. The Android preBuild task depends on the native build task, and the generated directory is registered as a JNI library source.
 
 ## 13. Architectural constraints
 
 - No cloud dependency for core typing.
 - No analytics or typed-content telemetry.
-- No database in the first integration milestone.
+- No persistent typing history.
+- No automatic clipboard access.
 - No plugin system before there are real extensions to support.
 - No speculative cross-platform abstraction while Android is the only target.
 - Never call Android InputConnection from Rust.

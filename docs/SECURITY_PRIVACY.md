@@ -1,6 +1,6 @@
 # Security and Privacy Design
 
-**Status:** Phase 1 implementation has a small local-only input path. Full security and privacy verification is pending.
+**Status:** Telex/VNI composition is local and in-memory; full security and privacy verification is pending.
 
 ## 1. Threat model
 
@@ -10,20 +10,20 @@ KB-Ai must assume that users may enter passwords, authentication codes, private 
 
 The design follows data minimization: do not collect information that the keyboard does not need to provide the requested input behavior.
 
-## 2. Current Phase 1 behavior
-
-The current source:
+## 2. Current source behavior
 
 - Does not request Android Internet permission.
-- Uses InputConnection to insert the key the user explicitly presses.
+- Uses InputConnection to insert composing and committed text into the focused editor.
 - Does not read the text already present in the focused editor.
 - Does not read or monitor Clipboard content.
-- Does not store typing history or composing text.
-- Does not implement suggestions, personalization, or learning.
-- Does not implement analytics or network services.
-- Includes tested policy helpers for password fields and the editor no-personalized-learning flag.
+- Creates a Rust composition session only for eligible text fields.
+- Password, email, URL, numeric, and phone fields bypass the Vietnamese composition engine.
+- Bamboo Core full-text tracking is disabled; completed words and raw keystrokes are not retained in its committed-text buffers.
+- Active composition remains in memory only for the current editor session.
+- Destroys the native session when input finishes or the service is destroyed.
+- Does not implement suggestions, personalization, analytics, or network services.
 
-The QWERTY prototype is not yet a stable daily-use keyboard. Do not use it for real passwords or other sensitive information until the release privacy and device-test gates are complete.
+The current build is an early prototype. Do not use it for real passwords or other sensitive information until the release privacy and device-test gates are complete.
 
 This is a source-level design description. CI and device testing must still verify the implementation.
 
@@ -31,34 +31,27 @@ This is a source-level design description. CI and device testing must still veri
 
 | Data | Default behavior |
 |---|---|
-| Text entered in an editor | Insert only the key explicitly pressed; do not persist |
-| Composing buffer | Not implemented in the current prototype |
+| Text entered in an editor | Process only the current composition needed for Telex/VNI; do not persist |
+| Active composing buffer | In-memory Rust session for the current editor; cleared on finish/reset |
+| Committed text | Stored by the target application; not retained in Bamboo Core |
+| Raw keystroke history | Not retained after composition commit |
 | Typing history | Not collected |
 | Personalized learning | Not implemented |
-| Password content | Never learn, suggest from, log, or persist |
+| Password content | No native input session, learning, suggestion, logging, or persistence |
 | Clipboard | No automatic monitoring |
 | Clipboard history | Not implemented; opt-in if introduced |
 | Personal dictionary | Later, local-only and user-controlled |
-| Theme images | Local user-selected content |
 | Analytics / telemetry | Not included |
 | Cloud synchronization | Not included |
 | Network access | Not required for the current keyboard |
 
 ## 4. Sensitive editor fields
 
-Kotlin derives the keyboard layout from EditorInfo inputType. EditorPolicy provides helpers for detecting password variations and the no-personalized-learning request.
+Kotlin derives the keyboard layout from EditorInfo inputType. EditorPolicy detects password variations. The composition engine is not created for password, email, URL, numeric, and phone fields.
 
-At minimum, future candidate or learning features must obey these rules:
+Future candidate or learning features must also respect IME_FLAG_NO_PERSONALIZED_LEARNING. This editor flag is a request from the app; it is not a substitute for detecting password input types.
 
-- Password and visible-password variations disable candidates and learning.
-- Numeric password and PIN-like fields use a suitable numeric layout and private behavior.
-- Fields requesting no personalized learning must disable learning for the session.
-- Email and URL fields must not apply ordinary natural-language autocorrection.
-- The policy must be reset when the editor session changes.
-
-Android's IME_FLAG_NO_PERSONALIZED_LEARNING is a request from the editor. KB-Ai must respect it; it is not a substitute for detecting password input types.
-
-The current prototype has no candidate or learning engine, so the policy is prepared and unit-tested ahead of those features.
+Any future field type excluded from composition must be covered by explicit tests.
 
 ## 5. Logging and diagnostics
 
@@ -113,9 +106,9 @@ Do not send typed text to a remote AI service by default.
 
 ## 9. Native boundary
 
-- Validate all JNI arguments and lengths.
+- Validate all JNI handles and character values.
 - Convert native failures into controlled error results.
-- Do not allow Rust panics to unwind across JNI.
+- Do not allow Rust panics to unwind across the JVM boundary.
 - Do not leave unexpected Java exceptions pending.
 - Do not pass Android framework objects into the Rust core.
 - Do not create native background threads that call back into Kotlin in the MVP.

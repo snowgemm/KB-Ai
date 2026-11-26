@@ -1,6 +1,6 @@
 # UI/UX Specification
 
-**Status:** Proposed  
+**Status:** Core keyboard layout implemented as a prototype; advanced surfaces remain proposed.  
 **Reference direction:** Familiar multi-tool Android keyboard patterns with an original KB-Ai identity.
 
 ## 1. Experience goals
@@ -9,28 +9,43 @@
 - Keep the typing surface visually quiet and predictable.
 - Make common tools reachable without showing every tool at once.
 - Make customization discoverable without making initial setup complicated.
-- Maintain legibility across themes, images, screen sizes, and orientations.
+- Maintain legibility across themes, screen sizes, and orientations.
 - Avoid decorative complexity, gradients, and unnecessary animation.
 
 ## 2. Keyboard surface
 
 ### Default letter layout
 
-The default keyboard contains:
+The current prototype contains:
 
-1. A compact utility strip or candidate row.
-2. An optional number row.
-3. Three QWERTY letter rows.
-4. Shift and Backspace controls.
-5. A bottom row with symbol switch, punctuation, language/IME switch where appropriate, space, and the editor action key.
+1. Three QWERTY letter rows.
+2. Shift and Backspace controls.
+3. A bottom row with symbol switch, punctuation, VI/EN toggle where supported, space, and the editor action key.
 
-The number row is optional. Key labels, secondary characters, and long-press behavior must be consistent across layouts.
+The optional number row and long-press alternatives are not implemented yet. Key labels and touch behavior must remain consistent across layouts.
+
+### Vietnamese and English modes
+
+- Eligible text fields start in Vietnamese mode.
+- Telex and VNI are supported by the combined Rust input engine.
+- The VI/EN key switches the active engine mode.
+- English mode bypasses Vietnamese transformations.
+- Switching modes finalizes the current composition before changing modes.
+- Password, email, URL, number, and phone fields do not create a Vietnamese composition session.
+
+### Composing text
+
+- Show the active preedit in the focused editor using Android's composing-text API.
+- Space and punctuation finalize the current preedit before inserting the boundary character.
+- Backspace inside an active composition undoes the last physical keystroke.
+- Backspace outside the active composition is delegated to the Android editor.
+- If the cursor or selection moves away from the composition end, finalize the composition rather than editing at a stale position.
 
 ### Candidate and toolbar behavior
 
-- Show composing text and candidates when they are useful.
+- Candidate suggestions are not implemented yet.
 - Do not show an empty candidate row that consumes height.
-- Keep a compact toolbar entry point available.
+- Keep a compact toolbar entry point available when tools are implemented.
 - The expanded tool panel must not permanently occupy the typing surface.
 - Candidate results must be associated with the active editor session and revision.
 
@@ -118,7 +133,7 @@ Planned interactions:
 | Toolbar tap | Open tools |
 | Horizontal panel swipe | Change tool page |
 | Long-press tool | Pin or rearrange, when customization is implemented |
-| ABC / layout switch | Return to the letter layout |
+| ABC / layout switch | Return to the letter keyboard |
 
 Gestures must be configurable and must not conflict with swipe typing, accessibility services, or system navigation.
 

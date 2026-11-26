@@ -2,7 +2,7 @@
 
 Thank you for considering a contribution.
 
-KB-Ai currently has a Phase 1 functional QWERTY prototype. Vietnamese Telex, VNI, prediction, and production release hardening are not complete.
+KB-Ai currently has a QWERTY keyboard prototype with Bamboo Core 0.6.1 integrated for Telex and VNI. Dictionaries, prediction, autocorrection, advanced editing, and production release hardening are not complete.
 
 ## Before starting
 
@@ -41,7 +41,8 @@ On Windows, use gradlew.bat for the last command. These commands are the expecte
 - Format Rust with rustfmt.
 - Run Rust tests and Clippy for changed crates.
 - Run Android unit tests, lint, and relevant build variants.
-- Test the IME in multiple editor types, including password and numeric fields.
+- Test Telex and VNI in multiple editor types, including password, email, and numeric fields.
+- Test composition boundaries, selection changes, and editor switching.
 - Test Unicode behavior with combining marks and multi-code-point emoji.
 - Include regression tests for every fixed input or lifecycle bug.
 - Keep native interfaces small, typed, and versioned.

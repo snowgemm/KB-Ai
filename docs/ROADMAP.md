@@ -1,68 +1,78 @@
 # Roadmap
 
-**Status:** Phase 1 QWERTY prototype implemented in source; CI and physical-device verification remain open. Milestones are ordered by dependency and risk, not by calendar date. No release dates are promised.
+**Status:** Telex/VNI engine integration implemented in source; CI and physical-device verification are pending. Milestones are ordered by dependency and risk, not by calendar date. No release dates are promised.
 
 ## Phase 0 — Repository and integration spike
 
 **Goal:** prove the Android/Rust toolchain before building product features.
 
-Implemented source scope:
+Implemented:
 
-- Gradle application skeleton.
-- Rust workspace with a core crate and JNI cdylib.
-- Android app and initial InputMethodService.
-- Kotlin-to-Rust status call.
-- Rust status unit test.
-- Android editor-policy unit tests.
-- Pinned toolchain and CI workflow.
+- Android app and InputMethodService.
+- Rust workspace and JNI library.
+- Rust formatting, tests, Clippy, Android unit tests, APK build in CI.
+- ARM64 and x86_64 native library packaging.
 
-Remaining exit checks:
-
-- CI builds the APK successfully.
-- Rust formatting, tests, and Clippy pass.
-- Android unit tests pass.
-- Native libraries are packaged for ARM64 and x86_64.
-- Install and test on a physical Android device.
-- Record actual build and device-test evidence.
-
-Do not treat documentation or source creation alone as completion of Phase 0.
+The Phase 0 CI build passed on 2026-11-25. Physical-device evidence is still required.
 
 ## Phase 1 — Functional Android IME
 
-Implemented in the current source:
+Implemented in source:
 
 - QWERTY letter layout.
-- Shift and one-shot uppercase behavior.
-- Backspace through Android key events.
-- Space, comma, period, and symbol layout.
-- Numeric layout for number/date-time fields.
-- Phone layout for phone fields.
-- Email and URL punctuation adjustments.
-- Editor action labels and handling for Go, Search, Send, Next, Previous, and Done.
+- Shift and one-shot uppercase.
+- Backspace, Space, punctuation, and symbol layout.
+- Numeric and phone layouts based on EditorInfo.
+- Editor actions: Go, Search, Send, Next, Previous, and Done.
+- Email and URL punctuation.
+- VI/EN toggle for eligible text fields.
 - Test fields for text, email, URL, number, password, and multiline input.
 
-Still required before Phase 1 can be called complete:
+Still required:
 
-- CI build and test success.
 - Physical-device testing on supported Android versions.
 - Validation in common third-party editors.
 - Accessibility and touch-target review.
 - Portrait/landscape and small-screen review.
-- Regression testing for selection replacement, editor switching, and rapid typing.
+- Regression tests for selection replacement, editor switching, and rapid typing.
 
-## Phase 2 — Vietnamese input engine and text editing
+## Phase 2 — Vietnamese input engine
 
-- Telex engine.
-- VNI engine.
-- Composing text and commit rules.
-- Backspace and undo within unfinished syllables.
-- Capitalization, punctuation, and restoration rules.
-- Unicode grapheme-aware deletion and explicit UTF-8 / UTF-16 offset conversion.
-- Versioned Vietnamese test corpus.
+Implemented in source:
 
-**Exit criteria:** the reviewed corpus passes and no known high-severity text corruption defect remains.
+- Bamboo Core 0.6.1 integration through the Rust kb-core wrapper.
+- Combined Telex + VNI input mode.
+- Live composition using Android InputConnection.setComposingText.
+- Composition finalization at spaces and punctuation.
+- Per-key undo inside the active composition.
+- English bypass mode and VI/EN toggle.
+- Forced-boundary handling for the bounded Rust composition buffer.
+- Per-editor session creation and destruction.
+- Disable Bamboo committed-text tracking to avoid retaining completed text.
 
-## Phase 3 — Core experience and customization
+Verification still required:
+
+- CI build and all Rust/Android tests pass after integration.
+- Expanded Telex/VNI corpus, including uppercase, repeated keys, invalid sequences, punctuation, and mixed English/Vietnamese.
+- Test backspace during a composition and after commit.
+- Confirm selection movement and app switching do not move or duplicate text.
+- Physical-device testing in messaging, browser, notes, and search fields.
+
+**Exit criteria:** the reviewed corpus passes, composition is stable across tested editors, and no known high-severity text corruption defect remains.
+
+## Phase 3 — Unicode and editor hardening
+
+- Grapheme-aware deletion and cursor controls.
+- Explicit UTF-8 / UTF-16 offset conversion for native/editor boundaries.
+- Selection reconciliation tests.
+- Expanded sensitive-field handling.
+- No-content logging and storage checks.
+- Physical-device performance baselines.
+- Accessibility review.
+
+**Exit criteria:** all required regression, privacy, and device tests pass.
+
+## Phase 4 — Core experience and customization
 
 - Candidate row foundation.
 - Toolbar and expandable tool pages.
@@ -71,9 +81,7 @@ Still required before Phase 1 can be called complete:
 - Built-in themes and local image background.
 - Theme preview and persistence.
 
-**Exit criteria:** customization does not cause input loss, unacceptable frame jank, or accessibility regressions.
-
-## Phase 4 — Local language support
+## Phase 5 — Local language support
 
 - Vietnamese and English dictionaries.
 - Personal dictionary, if privacy and deletion behavior are complete.
@@ -81,9 +89,7 @@ Still required before Phase 1 can be called complete:
 - Explicit opt-in for local personalization.
 - Stale-result cancellation and revision checks.
 
-**Exit criteria:** suggestions are correct enough for the reviewed corpus, can be disabled, and do not alter committed text without user action.
-
-## Phase 5 — Everyday tools
+## Phase 6 — Everyday tools
 
 - Emoji search and categories.
 - Clipboard tools with opt-in history.
@@ -91,9 +97,7 @@ Still required before Phase 1 can be called complete:
 - Text shortcuts.
 - Tool pinning and reordering.
 
-**Exit criteria:** each tool has clear permissions, failure handling, privacy behavior, and tests.
-
-## Phase 6 — AI and advanced features
+## Phase 7 — AI and advanced features
 
 Evaluate independently:
 

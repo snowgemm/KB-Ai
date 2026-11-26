@@ -5,17 +5,27 @@ This project includes or references the following third-party components. Re-che
 ## Gradle Wrapper 9.9.2
 
 - Source: https://github.com/gradle/gradle/tree/v9.9.2
-- Files: `gradlew`, `gradlew.bat`, and `gradle/wrapper/gradle-wrapper.jar`
+- Files: gradlew, gradlew.bat, and gradle/wrapper/gradle-wrapper.jar
 - License: Apache License 2.0
-- The upstream license text is included at [gradle/wrapper/LICENSE](gradle/wrapper/LICENSE).
-- Official wrapper JAR SHA-256: `621008afc4f5d59357fcf06ffa644dd5aade5e091bdc363742710445f73cdaf8`.
+- The upstream license text is included at gradle/wrapper/LICENSE.
+- Official wrapper JAR SHA-256: 621008afc4f5d59357fcf06ffa644dd5aade5e091bdc363742710445f73cdaf8.
 
 ## Rust JNI crate
 
-- Package: `jni` 0.22.4
+- Package: jni 0.22.4
 - Source: https://crates.io/crates/jni/0.22.4
 - License: MIT OR Apache-2.0 (as declared by the upstream package).
 - The dependency is fetched by Cargo and is not vendored into this repository.
+
+## Bamboo Core
+
+- Package: bamboo-core 0.6.1
+- Source: https://github.com/bamboo-vi/bamboo-core
+- Package page: https://crates.io/crates/bamboo-core/0.6.1
+- License: MIT (as declared by the upstream package).
+- Copyright notices in the upstream license: Luong Thanh Lam (2018) and nguien (2024).
+- KB-Ai consumes the published crate through Cargo; the upstream source is not copied into this repository.
+- KB-Ai disables Bamboo Core full-text tracking so committed words and raw keystrokes are not retained in the engine's full-text buffers.
 
 ## cargo-ndk
 

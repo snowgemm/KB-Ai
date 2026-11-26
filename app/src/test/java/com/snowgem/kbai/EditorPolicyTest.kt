@@ -52,6 +52,46 @@ class EditorPolicyTest {
     }
 
     @Test
+    fun normalTextAndMultilineTextSupportVietnameseComposition() {
+        assertTrue(EditorPolicy.supportsVietnameseComposition(InputType.TYPE_CLASS_TEXT))
+        assertTrue(
+            EditorPolicy.supportsVietnameseComposition(
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            )
+        )
+    }
+
+    @Test
+    fun passwordEmailAndUrlFieldsBypassVietnameseComposition() {
+        assertFalse(
+            EditorPolicy.supportsVietnameseComposition(
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            )
+        )
+        assertFalse(
+            EditorPolicy.supportsVietnameseComposition(
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+            )
+        )
+        assertFalse(
+            EditorPolicy.supportsVietnameseComposition(
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS
+            )
+        )
+        assertFalse(
+            EditorPolicy.supportsVietnameseComposition(
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+            )
+        )
+    }
+
+    @Test
+    fun numericAndPhoneFieldsBypassVietnameseComposition() {
+        assertFalse(EditorPolicy.supportsVietnameseComposition(InputType.TYPE_CLASS_NUMBER))
+        assertFalse(EditorPolicy.supportsVietnameseComposition(InputType.TYPE_CLASS_PHONE))
+    }
+
+    @Test
     fun numericAndPhoneEditorsChooseMatchingLayouts() {
         assertEquals(
             KeyboardLayout.NUMERIC,

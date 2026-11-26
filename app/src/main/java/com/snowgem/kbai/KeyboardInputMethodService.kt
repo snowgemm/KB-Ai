@@ -29,6 +29,15 @@ class KeyboardInputMethodService : InputMethodService() {
     private var shifted = false
     private var symbolsVisible = false
 
+    private var nativeBridge: NativeBridge? = null
+    private var nativeSession = 0L
+    private var composingText = ""
+    private var expectedCursorPosition: Int? = null
+    private var awaitingSelectionSync = false
+    private var lastSelectionStart = -1
+    private var lastSelectionEnd = -1
+    private var vietnameseMode = true
+
     override fun onCreateInputView(): View {
         keyboardRoot = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -42,10 +51,27 @@ class KeyboardInputMethodService : InputMethodService() {
 
     override fun onStartInput(attribute: EditorInfo, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
+
+        if (restarting) {
+            finishComposition()
+        } else {
+            // A new editor owns a separate composition. Never flush the
+            // previous app's preedit into the newly focused editor.
+            composingText = ""
+            expectedCursorPosition = null
+            awaitingSelectionSync = false
+        }
+        destroyNativeSession()
+
         activeEditor = attribute
         activeLayout = KeyboardLayoutPolicy.initialLayout(attribute.inputType)
         shifted = attribute.initialCapsMode != 0
         symbolsVisible = false
+        vietnameseMode = supportsVietnameseInput(attribute)
+        lastSelectionStart = attribute.initialSelStart
+        lastSelectionEnd = attribute.initialSelEnd
+
+        if (supportsVietnameseInput(attribute)) createNativeSession()
         renderKeyboard()
     }
 
@@ -53,16 +79,93 @@ class KeyboardInputMethodService : InputMethodService() {
         super.onStartInputView(info, restarting)
         activeEditor = info
         activeLayout = KeyboardLayoutPolicy.initialLayout(info.inputType)
-        shifted = info.initialCapsMode != 0
-        symbolsVisible = false
         renderKeyboard()
     }
 
+    override fun onUpdateSelection(
+        oldSelStart: Int,
+        oldSelEnd: Int,
+        newSelStart: Int,
+        newSelEnd: Int,
+        candidatesStart: Int,
+        candidatesEnd: Int
+    ) {
+        super.onUpdateSelection(
+            oldSelStart,
+            oldSelEnd,
+            newSelStart,
+            newSelEnd,
+            candidatesStart,
+            candidatesEnd
+        )
+
+        if (composingText.isNotEmpty()) {
+            when {
+                newSelStart != newSelEnd -> finishComposition()
+
+                awaitingSelectionSync -> {
+                    // setComposingText places the cursor after the preedit.
+                    // Capture the editor's actual UTF-16 cursor position when
+                    // the initial selection was unavailable.
+                    expectedCursorPosition = newSelEnd
+                    awaitingSelectionSync = false
+                }
+
+                expectedCursorPosition != null &&
+                    newSelEnd != expectedCursorPosition -> {
+                    // Do not keep editing at a stale location after the user
+                    // moves the cursor away from the end of the composition.
+                    finishComposition()
+                }
+
+                expectedCursorPosition == null -> {
+                    expectedCursorPosition = newSelEnd
+                }
+            }
+        }
+
+        lastSelectionStart = newSelStart
+        lastSelectionEnd = newSelEnd
+    }
+
     override fun onFinishInput() {
-        super.onFinishInput()
+        finishComposition()
+        destroyNativeSession()
         activeEditor = null
         activeLayout = KeyboardLayout.ALPHABETIC
         symbolsVisible = false
+        composingText = ""
+        expectedCursorPosition = null
+        awaitingSelectionSync = false
+        lastSelectionStart = -1
+        lastSelectionEnd = -1
+        super.onFinishInput()
+    }
+
+    override fun onDestroy() {
+        finishComposition()
+        destroyNativeSession()
+        super.onDestroy()
+    }
+
+    private fun createNativeSession() {
+        val bridge = runCatching { NativeBridge() }.getOrNull() ?: return
+        val handle = runCatching { bridge.nativeCreateSession() }.getOrDefault(0L)
+        if (handle > 0L) {
+            nativeBridge = bridge
+            nativeSession = handle
+        }
+    }
+
+    private fun destroyNativeSession() {
+        val bridge = nativeBridge
+        val handle = nativeSession
+        nativeBridge = null
+        nativeSession = 0L
+
+        if (bridge != null && handle > 0L) {
+            runCatching { bridge.nativeDestroySession(handle) }
+        }
     }
 
     private fun renderKeyboard() {
@@ -95,50 +198,55 @@ class KeyboardInputMethodService : InputMethodService() {
 
         val emailField = isEmailField(activeEditor)
         val urlField = isUrlField(activeEditor)
-        addRow(
-            root,
-            listOf(
-                KeyboardKey("?123", 1.45f, KeyTone.FUNCTION, "Symbols") {
-                    symbolsVisible = true
-                    renderKeyboard()
-                },
-                KeyboardKey(
-                    if (emailField) "@" else if (urlField) "/" else ",",
-                    1f,
-                    description = if (emailField) "At sign" else if (urlField) "Slash" else "Comma"
-                ) {
-                    insertText(if (emailField) "@" else if (urlField) "/" else ",")
-                },
-                KeyboardKey("␣", 4.8f, KeyTone.ACCENT, "Space") {
-                    insertText(" ")
-                },
-                KeyboardKey(".", 1f, description = "Period") { insertText(".") },
-                actionKey()
-            )
+        val bottomRow = mutableListOf(
+            KeyboardKey("?123", 1.35f, KeyTone.FUNCTION, "Symbols") {
+                symbolsVisible = true
+                renderKeyboard()
+            }
         )
+
+        if (canSwitchLanguage()) {
+            bottomRow += languageToggleKey()
+        }
+
+        bottomRow += KeyboardKey(
+            if (emailField) "@" else if (urlField) "/" else ",",
+            0.85f,
+            description = if (emailField) "At sign" else if (urlField) "Slash" else "Comma"
+        ) {
+            insertText(if (emailField) "@" else if (urlField) "/" else ",")
+        }
+        bottomRow += KeyboardKey("␣", 4.2f, KeyTone.ACCENT, "Space") { insertText(" ") }
+        bottomRow += KeyboardKey(".", 0.85f, description = "Period") { insertText(".") }
+        bottomRow += actionKey()
+        addRow(root, bottomRow)
     }
 
     private fun renderSymbolsLayout(root: LinearLayout) {
         addRow(root, "1234567890".map { characterKey(it.toString()) })
-        addRow(root, listOf("@", "#", "$", "%", "&", "-", "+", "(", ")", "/").map { characterKey(it) })
+        addRow(
+            root,
+            listOf("@", "#", "$", "%", "&", "-", "+", "(", ")", "/")
+                .map { characterKey(it) }
+        )
         addRow(
             root,
             listOf("*", "\"", "'", ":", ";", "!", "?").map { characterKey(it) } +
                 KeyboardKey("⌫", 1.45f, KeyTone.FUNCTION, "Backspace", ::deleteBackward)
         )
-        addRow(
-            root,
-            listOf(
-                KeyboardKey("ABC", 1.45f, KeyTone.FUNCTION, "Letters") {
-                    symbolsVisible = false
-                    renderKeyboard()
-                },
-                KeyboardKey(",", 1f, description = "Comma") { insertText(",") },
-                KeyboardKey("␣", 4.8f, KeyTone.ACCENT, "Space") { insertText(" ") },
-                KeyboardKey(".", 1f, description = "Period") { insertText(".") },
-                actionKey()
-            )
+
+        val bottomRow = mutableListOf(
+            KeyboardKey("ABC", 1.35f, KeyTone.FUNCTION, "Letters") {
+                symbolsVisible = false
+                renderKeyboard()
+            }
         )
+        if (canSwitchLanguage()) bottomRow += languageToggleKey()
+        bottomRow += KeyboardKey(",", 0.85f, description = "Comma") { insertText(",") }
+        bottomRow += KeyboardKey("␣", 4.2f, KeyTone.ACCENT, "Space") { insertText(" ") }
+        bottomRow += KeyboardKey(".", 0.85f, description = "Period") { insertText(".") }
+        bottomRow += actionKey()
+        addRow(root, bottomRow)
     }
 
     private fun renderNumericLayout(root: LinearLayout) {
@@ -153,7 +261,9 @@ class KeyboardInputMethodService : InputMethodService() {
         val supportsDecimal = inputType and InputType.TYPE_NUMBER_FLAG_DECIMAL != 0
         val finalRow = mutableListOf<KeyboardKey>()
         if (supportsSign || supportsDateTime) finalRow += characterKey("-")
-        if (supportsDecimal || supportsDateTime) finalRow += characterKey(if (supportsDateTime) "/" else ".")
+        if (supportsDecimal || supportsDateTime) {
+            finalRow += characterKey(if (supportsDateTime) "/" else ".")
+        }
         finalRow += characterKey("0", 2f)
         finalRow += KeyboardKey("⌫", 1.2f, KeyTone.FUNCTION, "Backspace", ::deleteBackward)
         addRow(root, finalRow)
@@ -191,6 +301,23 @@ class KeyboardInputMethodService : InputMethodService() {
             if (character.isNotEmpty()) insertText(character)
         }
 
+    private fun languageToggleKey(): KeyboardKey {
+        val nextMode = if (vietnameseMode) "EN" else "VI"
+        return KeyboardKey(
+            if (vietnameseMode) "VI" else "EN",
+            0.9f,
+            KeyTone.FUNCTION,
+            "Switch to $nextMode"
+        ) {
+            finishComposition()
+            vietnameseMode = !vietnameseMode
+            renderKeyboard()
+        }
+    }
+
+    private fun canSwitchLanguage(): Boolean =
+        nativeBridge != null && nativeSession > 0L && supportsVietnameseInput(activeEditor)
+
     private fun actionKey(): KeyboardKey {
         val options = activeEditor?.imeOptions ?: EditorInfo.IME_ACTION_NONE
         val action = if (options and EditorInfo.IME_FLAG_NO_ENTER_ACTION != 0) {
@@ -207,8 +334,9 @@ class KeyboardInputMethodService : InputMethodService() {
             EditorInfo.IME_ACTION_DONE -> "Xong"
             else -> if (isMultilineEditor(activeEditor)) "↵" else "Enter"
         }
-        return KeyboardKey(label, 1.45f, KeyTone.ACCENT, label) {
+        return KeyboardKey(label, 1.35f, KeyTone.ACCENT, label) {
             val connection = currentInputConnection ?: return@KeyboardKey
+            finishComposition()
             when (action) {
                 EditorInfo.IME_ACTION_GO,
                 EditorInfo.IME_ACTION_SEARCH,
@@ -267,14 +395,133 @@ class KeyboardInputMethodService : InputMethodService() {
     }
 
     private fun insertText(value: String) {
-        if (value.isNotEmpty()) currentInputConnection?.commitText(value, 1)
+        if (value.isEmpty()) return
+        val codePointCount = value.codePointCount(0, value.length)
+        val codePoint = value.codePointAt(0)
+        val isWordCharacter = codePointCount == 1 && Character.isLetterOrDigit(codePoint)
+
+        if (
+            activeLayout == KeyboardLayout.ALPHABETIC &&
+            supportsVietnameseInput(activeEditor) &&
+            nativeBridge != null &&
+            nativeSession > 0L &&
+            isWordCharacter
+        ) {
+            processInputCharacter(codePoint)
+        } else {
+            commitLiteral(value)
+        }
+    }
+
+    private fun processInputCharacter(codePoint: Int) {
+        val bridge = nativeBridge ?: return commitLiteral(String(Character.toChars(codePoint)))
+        val handle = nativeSession
+        val next = runCatching {
+            bridge.nativeProcessKey(handle, codePoint, vietnameseMode)
+        }.getOrElse {
+            commitLiteral(String(Character.toChars(codePoint)))
+            return
+        }
+
+        val forcedCommit = runCatching {
+            bridge.nativeWasForcedCommit(handle)
+        }.getOrDefault(false)
+
+        if (forcedCommit) {
+            currentInputConnection?.finishComposingText()
+            composingText = ""
+            expectedCursorPosition = null
+            awaitingSelectionSync = false
+        }
+
+        applyComposingText(next)
+    }
+
+    private fun applyComposingText(next: String) {
+        val connection = currentInputConnection ?: run {
+            composingText = ""
+            expectedCursorPosition = null
+            awaitingSelectionSync = false
+            nativeBridge?.let { bridge ->
+                if (nativeSession > 0L) runCatching { bridge.nativeCommit(nativeSession) }
+            }
+            return
+        }
+        val oldText = composingText
+        val anchor = when {
+            oldText.isNotEmpty() && expectedCursorPosition != null ->
+                expectedCursorPosition!! - oldText.length
+
+            lastSelectionStart >= 0 && lastSelectionEnd >= 0 ->
+                minOf(lastSelectionStart, lastSelectionEnd)
+
+            else -> null
+        }
+
+        val applied = runCatching {
+            connection.setComposingText(next, 1)
+        }.getOrDefault(false)
+
+        if (!applied) {
+            composingText = ""
+            expectedCursorPosition = null
+            awaitingSelectionSync = false
+            nativeBridge?.let { bridge ->
+                if (nativeSession > 0L) runCatching { bridge.nativeCommit(nativeSession) }
+            }
+            return
+        }
+
+        composingText = next
+        expectedCursorPosition = anchor?.plus(next.length)
+        awaitingSelectionSync = expectedCursorPosition == null
+
+        if (next.isEmpty()) {
+            connection.finishComposingText()
+            expectedCursorPosition = null
+            awaitingSelectionSync = false
+        }
+    }
+
+    private fun commitLiteral(value: String) {
+        finishComposition()
+        currentInputConnection?.commitText(value, 1)
+    }
+
+    private fun finishComposition() {
+        if (composingText.isNotEmpty()) {
+            currentInputConnection?.finishComposingText()
+        }
+        composingText = ""
+        expectedCursorPosition = null
+        awaitingSelectionSync = false
+
+        val bridge = nativeBridge
+        val handle = nativeSession
+        if (bridge != null && handle > 0L) {
+            runCatching { bridge.nativeCommit(handle) }
+        }
     }
 
     private fun deleteBackward() {
+        val bridge = nativeBridge
+        if (composingText.isNotEmpty() && bridge != null && nativeSession > 0L) {
+            val next = runCatching {
+                bridge.nativeUndoKey(nativeSession)
+            }.getOrNull()
+            if (next != null) {
+                applyComposingText(next)
+                return
+            }
+        }
+
         if (currentInputConnection != null) {
             sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL)
         }
     }
+
+    private fun supportsVietnameseInput(info: EditorInfo?): Boolean =
+        info != null && EditorPolicy.supportsVietnameseComposition(info.inputType)
 
     private fun isEmailField(info: EditorInfo?): Boolean {
         if (info == null) return false
