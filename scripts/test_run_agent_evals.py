@@ -14,7 +14,7 @@ class AgentEvalRunnerTests(unittest.TestCase):
         (self.root / "src/policy.kt").write_text("fun privateTabsAreNotSaved() { }\n", encoding="utf-8")
         (self.root / "app").mkdir()
         (self.root / "app/AndroidManifest.xml").write_text(
-            '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application /></manifest>',
+            '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application></application></manifest>',
             encoding="utf-8",
         )
         (self.root / ".github/workflows").mkdir(parents=True)
