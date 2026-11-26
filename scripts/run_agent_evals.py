@@ -139,7 +139,7 @@ def check_one(root: Path, check: dict[str, Any]) -> tuple[bool, str]:
         content = read_repo_file(root, check.get("path"))
         uses_values = []
         for line in content.splitlines():
-            match = re.match(r"^\s*uses:\s*([^\s#]+)", line)
+            match = re.match(r"^\s*(?:-\s*)?uses:\s*([^\s#]+)", line)
             if match:
                 uses_values.append(match.group(1))
         unpinned = [
