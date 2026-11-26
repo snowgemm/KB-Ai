@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "project": "KB-Ai",
+  "evaluation_scope": "Repository-artifact acceptance scenarios; no model API is invoked.",
+  "cases": [
+    {
+      "id": "KB-INPUT-001",
+      "title": "Telex/VNI composition and rollback",
+      "category": "input-correctness",
+      "severity": "critical",
+      "task_prompt": "Add or modify Vietnamese input behavior without regressing Telex, VNI, English bypass, backspace, or commit/reset semantics.",
+      "checks": [
+        {
+          "id": "telex-test",
+          "type": "test_method",
+          "path": "native/crates/kb-core/src/lib.rs",
+          "name": "telex_composes_vietnamese_text"
+        },
+        {
+          "id": "vni-test",
+          "type": "test_method",
+          "path": "native/crates/kb-core/src/lib.rs",
+          "name": "vni_composes_vietnamese_text"
+        },
+        {
+          "id": "english-bypass-test",
+          "type": "test_method",
+          "path": "native/crates/kb-core/src/lib.rs",
+          "name": "english_mode_does_not_apply_vietnamese_transformations"
+        },
+        {
+          "id": "undo-test",
+          "type": "test_method",
+          "path": "native/crates/kb-core/src/lib.rs",
+          "name": "backspace_undoes_the_last_input_key"
+        },
+        {
+          "id": "commit-test",
+          "type": "test_method",
+          "path": "native/crates/kb-core/src/lib.rs",
+          "name": "commit_clears_the_active_preedit"
+        }
+      ]
+    },
+    {
+      "id": "KB-EDITOR-001",
+      "title": "Sensitive editor types bypass composition",
+      "category": "privacy",
+      "severity": "critical",
+      "task_prompt": "Change editor integration while ensuring password, email, URL, numeric, and phone fields bypass Vietnamese composition.",
+      "checks": [
+        {
+          "id": "editor-policy",
+          "type": "file_contains",
+          "path": "app/src/main/java/com/snowgem/kbai/EditorPolicy.kt",
+          "texts": [
+            "fun isSensitive(",
+            "fun supportsVietnameseComposition(",
+            "TYPE_TEXT_VARIATION_EMAIL_ADDRESS",
+            "TYPE_TEXT_VARIATION_URI"
+          ]
+        },
+        {
+          "id": "password-email-url-test",
+          "type": "test_method",
+          "path": "app/src/test/java/com/snowgem/kbai/EditorPolicyTest.kt",
+          "name": "passwordEmailAndUrlFieldsBypassVietnameseComposition"
+        },
+        {
+          "id": "numeric-phone-test",
+          "type": "test_method",
+          "path": "app/src/test/java/com/snowgem/kbai/EditorPolicyTest.kt",
+          "name": "numericAndPhoneFieldsBypassVietnameseComposition"
+        },
+        {
+          "id": "password-personalization-test",
+          "type": "test_method",
+          "path": "app/src/test/java/com/snowgem/kbai/EditorPolicyTest.kt",
+          "name": "passwordAlwaysDisablesPersonalization"
+        }
+      ]
+    },
+    {
+      "id": "KB-PRIVACY-001",
+      "title": "No permission or committed-text retention",
+      "category": "security",
+      "severity": "critical",
+      "task_prompt": "Add keyboard functionality without network access, permission creep, typed-content telemetry, or committed-text retention.",
+      "checks": [
+        {
+          "id": "manifest-has-no-permissions",
+          "type": "manifest_no_permissions",
+          "path": "app/src/main/AndroidManifest.xml"
+        },
+        {
+          "id": "tracking-disabled",
+          "type": "file_contains",
+          "path": "native/crates/kb-core/src/lib.rs",
+          "text": "engine.set_full_text_tracking(false);"
+        },
+        {
+          "id": "committed-text-not-retained-test",
+          "type": "test_method",
+          "path": "native/crates/kb-core/src/lib.rs",
+          "name": "committed_text_is_not_retained_by_the_engine"
+        },
+        {
+          "id": "privacy-doc-current-boundary",
+          "type": "file_contains",
+          "path": "docs/SECURITY_PRIVACY.md",
+          "texts": [
+            "Does not request Android Internet permission.",
+            "Does not read or monitor Clipboard content.",
+            "Bamboo Core full-text tracking is disabled"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KB-JNI-001",
+      "title": "JNI input validation and session lifetime",
+      "category": "architecture",
+      "severity": "high",
+      "task_prompt": "Change the Kotlin/Rust bridge without accepting invalid Unicode scalars, using stale session handles, or leaking sessions across editor lifecycles.",
+      "checks": [
+        {
+          "id": "unicode-scalar-validation",
+          "type": "file_contains",
+          "path": "native/crates/kb-ai-native/src/lib.rs",
+          "text": "char::from_u32(key_code as u32)"
+        },
+        {
+          "id": "live-session-lookup",
+          "type": "file_contains",
+          "path": "native/crates/kb-ai-native/src/lib.rs",
+          "text": ".get_mut(&handle)"
+        },
+        {
+          "id": "session-destruction",
+          "type": "file_contains",
+          "path": "native/crates/kb-ai-native/src/lib.rs",
+          "text": "lock_sessions().remove(&handle)"
+        },
+        {
+          "id": "kotlin-session-lifecycle",
+          "type": "file_contains",
+          "path": "app/src/main/java/com/snowgem/kbai/KeyboardInputMethodService.kt",
+          "texts": [
+            "createNativeSession()",
+            "destroyNativeSession()"
+          ]
+        },
+        {
+          "id": "typed-jni-boundary",
+          "type": "file_contains",
+          "path": "app/src/main/java/com/snowgem/kbai/NativeBridge.kt",
+          "texts": [
+            "nativeProcessKey",
+            "nativeDestroySession"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KB-CI-001",
+      "title": "Read-only, pinned, reproducible CI",
+      "category": "delivery",
+      "severity": "high",
+      "task_prompt": "Modify the build pipeline without granting repository write access or allowing mutable third-party action references.",
+      "checks": [
+        {
+          "id": "read-only-token",
+          "type": "workflow_read_only",
+          "path": ".github/workflows/android.yml"
+        },
+        {
+          "id": "actions-pinned",
+          "type": "workflow_actions_pinned_sha",
+          "path": ".github/workflows/android.yml"
+        },
+        {
+          "id": "quality-gates",
+          "type": "workflow_contains_all",
+          "path": ".github/workflows/android.yml",
+          "texts": [
+            "cargo fmt --all",
+            "cargo test --workspace",
+            "cargo clippy --workspace",
+            "python3 -m unittest discover -s scripts",
+            "python3 scripts/verify_architecture.py",
+            "python3 scripts/run_agent_evals.py",
+            ":app:lintDebug",
+            ":app:testDebugUnitTest",
+            ":app:assembleDebug"
+          ]
+        }
+      ]
+    }
+  ]
+}

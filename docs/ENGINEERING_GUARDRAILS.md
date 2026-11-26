@@ -26,6 +26,14 @@ Each implementation task must pass these behavioral evaluations:
 
 The architecture guard is mutation-tested with valid and intentionally broken fixtures. The tests prove that added Android permissions, removal of Bamboo full-text tracking protection, removal of the IME binding permission, and missing Unicode validation are rejected.
 
+## Agent Evaluation Pipeline
+
+Task scenarios live in `evals/agent-evals.json`. The runner checks Telex/VNI test coverage, sensitive editor boundaries, data minimization, JNI lifecycle contracts, and CI configuration without executing commands supplied by the evaluation data.
+
+Run `python3 scripts/run_agent_evals.py` after an agent change. It writes `build/agent-evals/report.json`, calculates a weighted score (critical cases carry more weight), and fails CI if any required case fails. GitHub Actions publishes the report as an artifact and step summary.
+
+These evaluations grade repository artifacts, not model reasoning. Rust tests, Clippy, Android Lint, unit tests, builds, and physical-device tests remain separate evidence gates.
+
 ## Required verification
 
 ```bash

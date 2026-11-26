@@ -22,3 +22,12 @@
 - Do not introduce a new dependency or native API without evaluating maintenance, license, security, binary size, and runtime cost.
 - Do not claim the keyboard is stable from unit tests or CI alone. Physical-device IME behavior remains a separate acceptance gate.
 - Keep action permissions minimal and third-party GitHub Actions pinned to full commit SHAs.
+
+
+## Agent evaluation protocol
+
+- Select the matching scenario in `evals/agent-evals.json` before changing input, editor, privacy, or JNI behavior.
+- After implementation, run `python3 scripts/run_agent_evals.py`, Rust format/tests/Clippy, Android Lint, unit tests, and the Android build.
+- Do not weaken assertions or remove regression vectors to obtain a pass. Update a scenario only when the documented product contract changes and the change is reviewed.
+- Report the score, failed cases, CI run, and physical-device limitations.
+- The pack grades repository artifacts; it does not score an LLM's hidden reasoning.
